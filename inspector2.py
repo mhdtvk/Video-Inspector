@@ -85,10 +85,9 @@ class Inspector_call:
 
 
     def run(self):
-      tmp_Excel_report = {}
-      result = []
-      self.excel_gen = Excel_generator(self.excel_path + "Excel_Report.xlsx")
-    
+      folder_name = os.path.basename(self.root_path)
+      self.excel_gen = Excel_generator(self.excel_path + f"{folder_name}_Excel_Report.xlsx")
+
 
       if not os.path.exists(self.json_report):
         os.makedirs(self.json_report)
@@ -119,10 +118,6 @@ class Inspector_call:
 
       for one_report in self.result:
         print(one_report)
-
-inspector = Inspector_call(root_path = '/home/mt/Public/cv3_pr_20_10_2023_001', enable_report = True , json_path = '/home/mt/Public/cv3_pr_20_10_2023_001/Inspector_Report/', Light_mode = True ,excel_path = '/home/mt/Public/cv3_pr_20_10_2023_001/excel_report/' )
-
-inspector.run()
 
 
 

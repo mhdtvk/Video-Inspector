@@ -6,7 +6,7 @@ import pandas as pd
 
 class Excel_generator():
     def __init__(self, path_excel: str):
-        self.path_excel = path_excel
+        self.path_excel = path_excel 
         self.false_check = {}
 
     def remove_default_sheet(self):
