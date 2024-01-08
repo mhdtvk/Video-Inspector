@@ -119,5 +119,7 @@ class Inspector_call:
       for one_report in self.result:
         print(one_report)
 
+#inspector = Inspector_call(root_path = '/home/mt/Public/cv3_pr_20_10_2023_001', enable_report = True , json_path = '/home/mt/Public/cv3_pr_20_10_2023_001/Inspector_Report/', Light_mode = True ,excel_path = '/home/mt/Public/cv3_pr_20_10_2023_001/excel_report/' )
+
 
 
