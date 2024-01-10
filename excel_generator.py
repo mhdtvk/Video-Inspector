@@ -1,34 +1,42 @@
-from openpyxl import Workbook, load_workbook
-from openpyxl.styles import PatternFill, Border, Side, Alignment
-from openpyxl.utils.dataframe import dataframe_to_rows
-import openpyxl.utils
-import pandas as pd
+try:
+    from openpyxl import Workbook, load_workbook
+    from openpyxl.styles import PatternFill, Border, Side, Alignment
+    from openpyxl.utils.dataframe import dataframe_to_rows
+    import os
+    import openpyxl.utils
+    import pandas as pd
+except ImportError as e:
+    print(f"Error: {e}")
+    exit(1)
 
-class Excel_generator():
-    def __init__(self, path_excel: str):
-        self.path_excel = path_excel 
+
+class ExcelGenerator:
+    def __init__(self, excel_path: str):
+        self.excel_directory = excel_path
+        self.excel_file_path = excel_path + "_Excel_Report.xlsx"
         self.false_check = {}
 
     def remove_default_sheet(self):
         try:
-            print(self.path_excel)
-            workbook = load_workbook(self.path_excel)
+            workbook = load_workbook(self.excel_file_path)
             if 'Sheet' in workbook.sheetnames:
                 workbook.remove(workbook['Sheet'])
-                workbook.save(self.path_excel)
-        except FileNotFoundError:
+                workbook.save(self.excel_file_path)
+        except :
             pass  # No need to remove if the file doesn't exist yet
 
     def create_or_load_workbook(self):
         self.remove_default_sheet()
         try:
-            workbook = load_workbook(self.path_excel)
-        except FileNotFoundError:
+            workbook = load_workbook(self.excel_file_path)
+        except :
             workbook = Workbook()
-            workbook.save(self.path_excel)
+            workbook.save(self.excel_file_path)
         return workbook
 
     def run(self, report: dict, name: str):
+            os.makedirs(self.excel_directory)
+
         self.false_check[name] = {}
         # Load existing or create a new workbook
         workbook = self.create_or_load_workbook()
@@ -46,7 +54,6 @@ class Excel_generator():
         # Add a new column at the beginning
         sheet.insert_cols(1)
 
-        # Merge cells for 'Root check'
         sheet.merge_cells('A3:A4')
         sheet['A3'] = 'Root check'
         sheet['D3'].value = sheet['C3'].value
@@ -56,11 +63,9 @@ class Excel_generator():
         sheet.merge_cells('C4:G4')
         sheet.column_dimensions['A'].width = 15
 
-        # Merge cells for 'Sensor check'
         sheet.merge_cells('A5:A14')
         sheet['A5'] = 'Sensor check'
 
-        # Apply formatting to the newly added sheet
         cells_widths = 30
         cells_heights = 30
         for col in range(2, len(df.columns) + 3):
@@ -94,7 +99,6 @@ class Excel_generator():
             for cell in row:
                 if cell.value == False:
                     self.false_check[name][row[1].value] = False
-                # Convert boolean values to strings
                 elif isinstance(cell.value, bool):
                     cell.value = 'True' if cell.value else 'False'
 
@@ -109,10 +113,10 @@ class Excel_generator():
         sheet['A2'].alignment = Alignment(horizontal='center', vertical='center')
 
         # Save changes to the Excel file
-        workbook.save(self.path_excel)
-        
-    def Create_Summary_Sheet(self):
-        workbook = load_workbook(self.path_excel)
+        workbook.save(self.excel_file_path)
+
+    def create_summary_sheet(self):
+        workbook = load_workbook(self.excel_file_path)
         if "Summary" in workbook.sheetnames:
             # Delete the existing sheet with the same name
             workbook.remove(workbook["Summary"])
@@ -128,19 +132,52 @@ class Excel_generator():
             for cell in row:
                 if cell.value == False:
                     cell.fill = PatternFill(start_color="FF7F7F", end_color="FF7F7F", fill_type='solid')
-                elif cell.value == None:
+                elif cell.value is None:
                     cell.fill = PatternFill(start_color="90EE90", end_color="90EE90", fill_type='solid')
                 cell.border = Border(left=border_style, right=border_style, top=border_style, bottom=border_style)
                 summary_sheet.row_dimensions[cell.row].height = 25
                 summary_sheet.column_dimensions[cell.column_letter].width = 10
-                cell.alignment = Alignment(horizontal='center', vertical='center')  
-        summary_sheet.column_dimensions['A'].width = 30 
+                cell.alignment = Alignment(horizontal='center', vertical='center')
+        summary_sheet.column_dimensions['A'].width = 30
 
-        workbook.save(self.path_excel)
+        workbook.save(self.excel_file_path)
 
-# Usage Example:
-# Create an instance of Excel_generator and use the run method
-# eg:
-# excel_gen = Excel_generator("path_to_your_excel_file.xlsx")
-# report_data = {"column1": [True, False], "column2": [False, True]}
-# excel_gen
+    def rearrange_critical_rows(self):
+        # Load the Excel file
+        workbook = load_workbook(self.excel_file_path)
+
+        # Select the active sheet
+        for sheet_name in workbook.sheetnames:
+            sheet = workbook[sheet_name]
+            print('/noooo', sheet_name)
+            # Extract the critical rows and rearrange them (replace with your logic)
+            important_rows = []
+
+            for row in range(1, sheet.max_row + 1):
+                # Perform your logic to identify important rows
+                # For example, let's say rows with certain criteria are considered important
+                if (
+                    sheet.cell(row=row, column=1).value == 'NumberOfFramesCheck'
+                    or sheet.cell(row=row, column=1).value == 'flexx2_ir_depth_consistency_check'
+                    or sheet.cell(row=row, column=1).value == 'kinect_ir_depth_consistency_check'
+                ):
+                    important_rows.append(sheet[row])
+                    sheet.delete_rows(row)
+
+                if (
+                    sheet.cell(row=row, column=2).value == 'NumberOfFramesCheck'
+                    or sheet.cell(row=row, column=1).value == 'flexx2_ir_depth_consistency_check'
+                    or sheet.cell(row=row, column=1).value == 'kinect_ir_depth_consistency_check'
+                ):
+                    important_rows.append(sheet[row])
+                    sheet.delete_rows(row)
+
+            # Rearrange the important rows in a specific order (replace with your logic)
+            # For example, moving critical rows to the top of the sheet
+            sheet.append([])
+            for row_data in important_rows:
+                sheet.append(row_data)
+
+        # Save the modified workbook
+        workbook.save(self.excel_file_path)
+
