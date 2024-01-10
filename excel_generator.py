@@ -12,9 +12,13 @@ except ImportError as e:
 
 class ExcelGenerator:
     def __init__(self, excel_path: str):
-        self.excel_directory = excel_path
-        self.excel_file_path = excel_path + "_Excel_Report.xlsx"
+        self.excel_file_path = f"{excel_path}_Excel_Report.xlsx"
         self.false_check = {}
+        self.creating_directory()
+
+    def creating_directory(self):
+        if not os.path.exists(os.path.dirname(self.excel_file_path) ):
+              os.makedirs(os.path.dirname(self.excel_file_path))
 
     def remove_default_sheet(self):
         try:
@@ -35,8 +39,6 @@ class ExcelGenerator:
         return workbook
 
     def run(self, report: dict, name: str):
-            os.makedirs(self.excel_directory)
-
         self.false_check[name] = {}
         # Load existing or create a new workbook
         workbook = self.create_or_load_workbook()

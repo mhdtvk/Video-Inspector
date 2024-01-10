@@ -3,6 +3,7 @@ try:
     from typing import Any
     import numpy as np
     import os
+    import json
 except ImportError as e:
     print(f"Error: {e}")
     exit(1)
@@ -25,6 +26,24 @@ def get_folder_and_file_sizes(root_folder: str) -> dict:
             folder_or_files_sizes[item] = os.path.getsize(item_path)
     return folder_or_files_sizes
 
+
+class SetConfigurationSetting:
+
+    def __init__(self) -> None:
+        self.read_config_data()
+        self.config_data = {}
+
+    def read_config_data(self) :
+    #Read data from the JSON file
+        with open('Configure settings.json', 'r') as json_file:
+         self.config_data = json.load(json_file)
+
+    def set_threshold(self,checker_name:str) -> int :
+        return self.config_data['threshold'][checker_name]    
+
+# Import configuration file
+set_config = SetConfigurationSetting()
+set_config.read_config_data()   
 
 class DataManager:
     """
@@ -413,7 +432,7 @@ class IrDepthConsistencyCheck(Check):
         self.second_sensor_exp_frm_num = None
         self.second_sensor_recorded_frame_num = None
 
-        self.difference_trsh = 1  # %
+        self.difference_trsh = set_config.set_threshold("IrDepthConsistencyCheck")  # %
         self.difference = None  # the
 
     def run(self) -> bool:
@@ -473,7 +492,7 @@ class RawSizeCheck(Check):
         self.txt_data = data['txt']
         self.rawv_data = data["rawv"]
         self.rawa_data = data["rawa"]
-        self.difference_trsh = 15
+        self.difference_trsh = set_config.set_threshold("RawSizeCheck")
         self.code = "00201"
         self.description = "Check size of raw files"
         self.raw_file_detail = {}
@@ -517,7 +536,7 @@ class NumberOfFramesCheck(Check):
         self.meta_data = data['meta']
         self.txt_data = data['txt']
         self.rawv_data = data["rawv"]
-        self.difference_trsh = 1  # %
+        self.difference_trsh = set_config.set_threshold("NumberOfFramesCheck")  # %
         self.code = "00301"
         self.description = "Checking the number of frames captured by the sensor"
         self.exp_frm_num = None
@@ -568,7 +587,7 @@ class VRecordDurationCheck(Check):
         self.exp_rec_duration = None
         self.act_rec_duration = None
         self.recorded_frame_num = None
-        self.difference_trsh = 15
+        self.difference_trsh = set_config.set_threshold("VRecordDurationCheck")
 
     def run(self) -> bool:
         """Run the check for video file duration."""
@@ -611,7 +630,7 @@ class AbnormalFrameDurationCheck(Check):
         self.description = "Checking the duration of each frame and comparing it with the normal frame duration"
         self.configured_frm_duration = None
         self.duration_difference_threshold = None
-        self.ratio_trsh = 15  # Threshold for the number of abnormal frames duration in %
+        self.ratio_trsh = set_config.set_threshold("AbnormalFrameDurationCheck")  # Threshold for the number of abnormal frames duration in %
         self.num_abn_frm_drt = 0
         self.abn_frms_drt = []
         self.recorded_frame_num = 0
@@ -754,8 +773,10 @@ class Checker:
         self.path = path
         self.light_mode = light_mode
         self.result = True
+        self.setting_data = None
 
     def run(self):
+        
         """Run the checkers."""
         # Root checking
         self.excel_report['Root_Checking'] = {}

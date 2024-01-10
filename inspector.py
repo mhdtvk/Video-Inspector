@@ -78,15 +78,20 @@ class Inspector():
 
     def run(self):
         # perform check
-        excel_report_generator = ExcelGenerator(self.excel_report_path )
+        
 
-        if not os.path.exists(self.json_report_path):
-            os.makedirs(self.json_report_path)
+        excel_report_generator = ExcelGenerator(self.excel_report_path )
+        
+        try:
+            if not os.path.exists(self.json_report_path):
+              os.makedirs(self.json_report_path)
+        except PermissionError :
+            print(" You don't have permission to export reports to the enterd path")
 
         for folders_name in tqdm(os.listdir(self.root_path)):
             if folders_name.isdigit() and len(folders_name) == 6:
                 check_path = (self.root_path + '/' + folders_name)
-                report_name = 'Report_' + folders_name
+                report_name = '/Report_' + folders_name
                 json_report_path = self.json_report_path + report_name
 
                 checker = Checker(check_path, self.light_mode)
@@ -103,11 +108,13 @@ class Inspector():
                 else:
                     self.print_in_terminal_result.append(f"Folder Name: {folders_name}\tCheck: Failed")
                     excel_report_generator.run(tmp_excel_report, folders_name)
-            elif folders_name not in ['inspector_report', 'excel_report']:
+            elif folders_name not in ['json_report', 'excel_report']:
                 print(f"The path has an unusual folder or file: {folders_name}")
 
         excel_report_generator.create_summary_sheet()
 
+        # Providing output for showing in terminal
+        print(f"\nChecked route: {self.root_path}\n")
         for one_report in self.print_in_terminal_result:
             print(one_report)
 
