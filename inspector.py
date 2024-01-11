@@ -62,7 +62,7 @@ def time_generator():
 
 
 class Inspector():
-    def __init__(self, root_path: str = '', enable_report: bool = True, json_path: str = '', light_mode=True, excel_path=''):
+    def __init__(self, root_path: str = '', enable_report = False, json_path: str = '', light_mode=True, excel_path=''):
         self.root_path = root_path
 
         self.enable_json_report = enable_report
@@ -78,45 +78,54 @@ class Inspector():
 
     def run(self):
         # perform check
-        
+        basename = os.path.basename(self.root_path)
+        if (basename).isdigit() and len(basename) == 4:
+            excel_report_generator = ExcelGenerator(self.excel_report_path )
 
-        excel_report_generator = ExcelGenerator(self.excel_report_path )
-        
-        try:
-            if not os.path.exists(self.json_report_path):
-              os.makedirs(self.json_report_path)
-        except PermissionError :
-            print(" You don't have permission to export reports to the enterd path")
+            try:
+                if not os.path.exists(self.json_report_path):
+                  os.makedirs(self.json_report_path)
+            except PermissionError :
+                print(" You don't have permission to export reports to the enterd path")
 
-        for folders_name in tqdm(os.listdir(self.root_path)):
-            if folders_name.isdigit() and len(folders_name) == 6:
-                check_path = (self.root_path + '/' + folders_name)
-                report_name = '/Report_' + folders_name
-                json_report_path = self.json_report_path + report_name
+            for folders_name in tqdm(os.listdir(self.root_path)):
+                if folders_name.isdigit() and len(folders_name) == 6:
+                    check_path = (self.root_path + '/' + folders_name)
+                    report_name = '/Report_' + folders_name
+                    json_report_path = self.json_report_path + report_name
 
-                checker = Checker(check_path, self.light_mode)
-                self.boolean_result, self.json_report_file, tmp_excel_report = checker.run()
+                    checker = Checker(check_path, self.light_mode)
+                    self.boolean_result, self.json_report_file, tmp_excel_report = checker.run()
 
-                if self.enable_json_report:
-                   # create the report
-                  report_generator = ReportGenerator(json_report_path, self.json_report_file, self.boolean_result, check_path)
-                  report_generator.run()
+                    if self.enable_json_report != 'false':
+                       # create the report
+                      report_generator = ReportGenerator(json_report_path, self.json_report_file, self.boolean_result, check_path)
+                      report_generator.run()
 
-                if self.boolean_result:
-                    self.print_in_terminal_result.append(f"Folder Name: {folders_name}\tCheck: Failed")
-                    excel_report_generator.run(tmp_excel_report, folders_name)
-                else:
-                    self.print_in_terminal_result.append(f"Folder Name: {folders_name}\tCheck: Failed")
-                    excel_report_generator.run(tmp_excel_report, folders_name)
-            elif folders_name not in ['json_report', 'excel_report']:
-                print(f"The path has an unusual folder or file: {folders_name}")
+                    if self.boolean_result:
+                        self.print_in_terminal_result.append(f"Folder Name: {folders_name}\tCheck: Failed")
+                        excel_report_generator.run(tmp_excel_report, folders_name)
+                    else:
+                        self.print_in_terminal_result.append(f"Folder Name: {folders_name}\tCheck: Failed")
+                        excel_report_generator.run(tmp_excel_report, folders_name)
+                elif folders_name not in ['json_report', 'excel_report']:
+                    print(f"# Warning : The Folder has an unusual folder or file: {folders_name}")
 
-        excel_report_generator.create_summary_sheet()
+            excel_report_generator.rearrange_critical_rows()
+            excel_report_generator.design_excel()
+            excel_report_generator.create_summary_sheet()
 
-        # Providing output for showing in terminal
-        print(f"\nChecked route: {self.root_path}\n")
-        for one_report in self.print_in_terminal_result:
-            print(one_report)
+
+
+            # Providing output for showing in terminal
+            print(f"\nChecked route: {self.root_path}\n")
+            for one_report in self.print_in_terminal_result:
+                print(one_report)
+        else:
+            print(f"\n# Warning: The path has an unusual folder or file:\n {self.root_path}")
+
+
+
 
 
 

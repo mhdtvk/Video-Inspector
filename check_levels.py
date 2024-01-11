@@ -317,7 +317,7 @@ class NumberOfFilesCheck(Check):
     def detailed_serialize(self):
         """Serialize detailed information."""
         super().serialize()
-        self.report = {
+        self.report = self.report | {
             "num_exp_file": self.num_exp_file,
             "num_file_found": self.num_file_found,
             "num_raw_exp_files": self.num_raw_exp_files,
@@ -361,7 +361,7 @@ class UnexpectedFileCheck(Check):
     def detailed_serialize(self):
         """Serialize detailed information."""
         super().serialize()
-        self.report = {
+        self.report = self.report |  {
             'num_unexp_file': self.num_unexp_file,
             'unexp_file': self.unexp_file
         }
@@ -397,7 +397,7 @@ class EmptyFilesCheck(Check):
     def detailed_serialize(self):
         """Serialize detailed information."""
         super().serialize()
-        self.report = {
+        self.report = self.report | {
             'zero_size_file': self.zero_size_file
         }
         return self.report
@@ -466,7 +466,7 @@ class IrDepthConsistencyCheck(Check):
     def detailed_serialize(self):
         """Serialize detailed information."""
         super().serialize()
-        self.report = {
+        self.report = self.report | {
             'first_sensor_name': self.first_sensor_name,
             'second_sensor_name': self.second_sensor_name,
             'first_sensor_recorded_frame_num': self.first_sensor_recorded_frame_num,
@@ -875,8 +875,8 @@ class Checker:
                         RawSize_check_res = RawSize_check.run()
                         if not RawSize_check_res:
                             sensor_check_result = False
-                    
-                        sensor_report['File_Checking'][file_name]['RawSizeCheck'] = (RawSize_check.light_serialize() if self.light_mode else RawSize_check.detailed_serialize())
+
+                        sensor_report['File_Checking'][file_name]['RawSizeCheck'] = RawSize_check.light_serialize() if self.light_mode else RawSize_check.detailed_serialize()
                         self.excel_report[name]['RawSizeCheck'] = RawSize_check_res
                     
                         # NumberOfFramesCheck
