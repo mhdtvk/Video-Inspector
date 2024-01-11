@@ -3,16 +3,12 @@
 # Welcome
 echo "Inspector Project"
 echo -e "\nEnter the configuration setting: \n"
-# Input folder path
-echo -e "\nFolder Path ? ( Press Enter for Default )"
-read folder_path
 
-# Use the default value if the user has not entered a value.
-if [ -z "$folder_path" ]; then
-    echo -e '\nEnter your Pc Username : '
-    read username
-    folder_path="/media/${username}/ibms_hd/CaVignal3/PatientRoom_Floor_-1/Oct_19_20_23_2023_EVS_recording_sessions"
-fi
+# Input folder path
+while [ -z "$folder_path" ]; do
+    echo -e "\nFolder Path ? "
+    read folder_path
+done
 
 # Input Json report path
 echo -e "\nJson Report Path ? ( Press Enter for Default )"

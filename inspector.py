@@ -118,10 +118,11 @@ class Inspector():
 
 
             # Providing output for showing in terminal
-            print(f"\nChecked route: {self.root_path}\n")
+            print(f"\n#[Info]: Checked route: {self.root_path}\n")
             for one_report in self.print_in_terminal_result:
                 print(one_report)
-        else:
+        elif (basename !='excel_report' and basename !='json_report'):
+            print(basename)
             print(f"\n#[Warning]: The path has an unusual folder or file:\n {self.root_path}")
 
 
