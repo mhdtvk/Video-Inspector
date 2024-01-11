@@ -109,7 +109,7 @@ class Inspector():
                         self.print_in_terminal_result.append(f"Folder Name: {folders_name}\tCheck: Failed")
                         excel_report_generator.run(tmp_excel_report, folders_name)
                 elif folders_name not in ['json_report', 'excel_report']:
-                    print(f"# Warning : The Folder has an unusual folder or file: {folders_name}")
+                    print(f"#[Warning]: The Folder has an unusual folder or file: {folders_name}")
 
             excel_report_generator.rearrange_critical_rows()
             excel_report_generator.design_excel()
@@ -122,7 +122,7 @@ class Inspector():
             for one_report in self.print_in_terminal_result:
                 print(one_report)
         else:
-            print(f"\n# Warning: The path has an unusual folder or file:\n {self.root_path}")
+            print(f"\n#[Warning]: The path has an unusual folder or file:\n {self.root_path}")
 
 
 

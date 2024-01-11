@@ -9,7 +9,9 @@ read folder_path
 
 # Use the default value if the user has not entered a value.
 if [ -z "$folder_path" ]; then
-    folder_path="/home/mt/Public/1"
+    echo -e '\nEnter your Pc Username : '
+    read username
+    folder_path="/media/${username}/ibms_hd/CaVignal3/PatientRoom_Floor_-1/Oct_19_20_23_2023_EVS_recording_sessions"
 fi
 
 # Input Json report path
@@ -17,7 +19,7 @@ echo -e "\nJson Report Path ? ( Press Enter for Default )"
 read json_report_path
 
 if [ -z "$json_report_path" ]; then
-    json_report_path="/home/mt/Public/1/cv3_pr_20_10_2023_001"
+    json_report_path=$folder_path
 fi
 
 # Input Excel report path
@@ -25,7 +27,7 @@ echo -e "\nExcel Report Path ? ( Press Enter for Default )"
 read excel_report_path
 
 if [ -z "$excel_report_path" ]; then
-    excel_report_path="/home/mt/Public/1/cv3_pr_20_10_2023_001"
+    excel_report_path=$folder_path
 
 fi
 
@@ -68,8 +70,8 @@ for name in "$folder_path"/*; do
     python3 main_inspector.py -f "$folder_path$folder_name" -e $enable_report -j "${json_report_path}/json_report/${folder_name}" -l $light_mode -x "${excel_report_path}/excel_report/${folder_name}"
  done
 
-echo -e "\n The Json Report saved :\n ${excel_report_path}"
-echo -e "\n The Excel Report saved :\n ${json_report_path}"
+echo -e "\n #[Info] The Json Report saved :\n ${excel_report_path}"
+echo -e "\n #[Info] The Excel Report saved :\n ${json_report_path}"
 read wait
 
 
