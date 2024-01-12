@@ -127,9 +127,10 @@ class ExcelGenerator:
         sheet = workbook[name]
 
         for row in sheet.iter_rows():
+            self.false_check[name][row[0].value] = True
             for cell in row:
-                if isinstance(cell.value, bool):
-                    self.false_check[name][row[0].value] = True if cell.value else False
+                if cell.value is False:
+                    self.false_check[name][row[0].value] = False 
         
         # Save changes to the Excel file
         workbook.save(self.excel_file_path)
@@ -141,12 +142,12 @@ class ExcelGenerator:
             workbook.remove(workbook["Summary"])
         summary_sheet = workbook.create_sheet(title="Summary", index=0)
         df = pd.DataFrame.from_dict(self.false_check)
-
+        
         for r in dataframe_to_rows(df, index=True, header=True):
             summary_sheet.append(r)
 
-        border_style = Side(style='medium', color='000000')
         summary_sheet.delete_rows(2, amount=2)
+        border_style = Side(style='medium', color='000000')
 
         for row in summary_sheet.iter_rows():
             for cell in row:

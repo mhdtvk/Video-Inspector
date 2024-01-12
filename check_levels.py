@@ -4,6 +4,8 @@ try:
     import numpy as np
     import os
     import json
+    import re
+
 except ImportError as e:
     print(f"Error: {e}")
     exit(1)
@@ -67,19 +69,33 @@ class DataManager:
         Returns:
         - ret (bool): True if data reading is successful, False otherwise.
         """
-        ret = True
+        data_managing_is_successful = True
+
+        if not self._prepare_data_for_saving():
+            data_managing_is_successful = False       
 
         if not self._read_raw_data():
-            ret = False
+            data_managing_is_successful = False
 
         if not self._read_txt_data():
-            ret = False
+            data_managing_is_successful = False
 
         if not self._read_metadata():
-            ret = False
+            data_managing_is_successful = False
 
-        return ret
+        return data_managing_is_successful
 
+    def _prepare_data_for_saving(self) -> bool :
+
+        recorded_files = os.listdir(self.path)
+        recorded_basename = {os.path.splitext(file)[0] for file in recorded_files}
+
+        for basename in recorded_basename :
+            if (f'{basename}.meta') in recorded_files and (f'{basename}.txt') in recorded_files and {(f'{basename}.rawv') in recorded_files or (f'{basename}.rawa') in recorded_files} :
+                self.data[basename] = {'rawa' : [], 'rawv' : [], 'txt' : [], 'meta' : []}
+
+        return bool(self.data)
+    
     def _read_raw_data(self) -> bool:
         """
         Read raw data files (.rawv, .rawa) and populate DataManager data attribute.
@@ -87,13 +103,13 @@ class DataManager:
         - ret (bool): True if reading raw data is successful, False otherwise.
         """
         ret = True
-        for file_name in os.listdir(self.path):
-            file_base_name, file_extension = os.path.splitext(file_name)
-            if file_extension in ('.rawv', '.rawa'):
+        for filename in self.data:
                 data = []
-                self.data[file_base_name] = {'rawa': data, 'rawv': data}
+                self.data[filename]['rawa'] = data
+                self.data[filename]['rawv'] = data
 
-                if self.data[file_base_name]['rawv'] == {} and self.data[file_base_name]['rawa'] == {}:
+                if self.data[filename]['rawv'] == {} and self.data[filename]['rawa'] == {}:
+                    
                     ret = False
         return ret
 
@@ -104,17 +120,15 @@ class DataManager:
         - ret (bool): True if reading .txt data is successful, False otherwise.
         """
         ret = True
-        for file_name in os.listdir(self.path):
-            file_base_name, file_extension = os.path.splitext(file_name)
-            if file_extension == '.txt':
-                data = []
-                with open(os.path.join(self.path, file_name), "r") as file:
+        for filename in self.data:
+            data = []
+            with open(os.path.join(self.path, f'{filename}.txt'), "r") as file:
                     for line in file:
                         columns = line.strip().split(' ')
                         row = [int(col) for col in columns]
                         data.append(row)
-                file.close()
-                self.data[file_base_name]['txt'] = data
+            file.close()
+            self.data[filename]['txt'] = data
 
         if not self.data:
             ret = False
@@ -128,16 +142,14 @@ class DataManager:
         - ret (bool): True if reading .meta files is successful, False otherwise.
         """
         ret = True
-        for file_name in os.listdir(self.path):
-            file_base_name, file_extension = os.path.splitext(file_name)
-            if file_extension == '.meta':
+        for filename in self.data:
                 data = {}
-                with open(os.path.join(self.path, file_name), "r") as file:
+                with open(os.path.join(self.path, f'{filename}.meta'), "r") as file:
                     for line in file:
                         columns = line.strip().split(' ')
                         data[columns[0]] = columns[1]
                 file.close()
-                self.data[file_base_name]['meta'] = data
+                self.data[filename]['meta'] = data
 
         if not self.data:
             ret = False
@@ -283,12 +295,22 @@ class NumberOfFilesCheck(Check):
     def run(self) -> bool:
         """Run the number of files check."""
         self.num_file_found = len(os.listdir(self.path))
-        self.num_exp_file = 3 * int(self.meta_data["file"][2])
+
+        pattern = re.compile(r'file:\s+\d+/(\d+)')
+        txt_meta_data = "\n".join(f"{key}: {value}" for key, value in self.meta_data.items())
+        
+        match = pattern.search(txt_meta_data)
+        
+        if match:
+        # Extract the value before the slash from the match
+            file_value =int( match.group(1))
+
+        self.num_exp_file = 3 * file_value
 
         if self.num_file_found != self.num_exp_file:
             self.result = False
 
-        self.num_raw_exp_files = int(self.meta_data["file"][2])
+        self.num_raw_exp_files = file_value
         for name in os.listdir(self.path):
             if name.lower().endswith(('.rawv', '.rawa')):
                 self.num_raw_found_files += 1
@@ -296,7 +318,7 @@ class NumberOfFilesCheck(Check):
         if not (self.num_raw_exp_files == self.num_raw_found_files):
             self.result = False
 
-        self.num_meta_exp_files = int(self.meta_data["file"][2])
+        self.num_meta_exp_files = file_value
         for name in os.listdir(self.path):
             if name.lower().endswith('.meta'):
                 self.num_meta_found_files += 1
@@ -304,7 +326,7 @@ class NumberOfFilesCheck(Check):
         if self.num_meta_exp_files != self.num_meta_found_files:
             self.result = False
 
-        self.num_txt_exp_files = int(self.meta_data["file"][2])
+        self.num_txt_exp_files = file_value
         for name in os.listdir(self.path):
             if name.lower().endswith('.txt'):
                 self.num_txt_found_files += 1
