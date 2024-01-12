@@ -588,6 +588,7 @@ class VRecordDurationCheck(Check):
         self.act_rec_duration = None
         self.recorded_frame_num = None
         self.difference_trsh = set_config.set_threshold("VRecordDurationCheck")
+        self.difference = None      #%
 
     def run(self) -> bool:
         """Run the check for video file duration."""
@@ -596,8 +597,9 @@ class VRecordDurationCheck(Check):
 
         self.exp_rec_duration = (int(self.meta_data['duration'][:index_s])) * 1000
         self.act_rec_duration = self.txt_data[self.recorded_frame_num - 1][0] - self.txt_data[0][0]
+        self.difference = (abs(1 - self.act_rec_duration / self.exp_rec_duration) * 100)
 
-        if self.difference_trsh < (abs(1 - self.act_rec_duration / self.exp_rec_duration) * 100):
+        if self.difference_trsh < self.difference:
             self.result = False
 
         return self.result
@@ -608,7 +610,7 @@ class VRecordDurationCheck(Check):
         self.report = self.report | {'exp_rec_duration (ms)': self.exp_rec_duration,
                                      'act_rec_duration (ms)': self.act_rec_duration,
                                      'Difference_trsh %': self.difference_trsh,
-                                     'Difference %': 1 - self.act_rec_duration / self.exp_rec_duration}
+                                     'Difference %': self.difference}
         return self.report
 
     def light_serialize(self):
