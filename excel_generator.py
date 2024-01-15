@@ -71,10 +71,10 @@ class ExcelGenerator:
                 sheet.merge_cells('A5:A11')
                 sheet['A5'] = 'Sensors check (L1)'
 
-                sheet.merge_cells('A16:A18')
-                sheet['A16'] = 'Sensors check (L2)'                
+                sheet.merge_cells('A18:A22')
+                sheet['A18'] = 'Sensors check (L2)'                
 
-                cells_widths = 30
+                cells_widths = 20
                 cells_heights = 30
                 for col in range(2, len(self.df.columns) + 3):
                     column_letter = openpyxl.utils.get_column_letter(col)
@@ -111,6 +111,8 @@ class ExcelGenerator:
                 sheet['A2'].fill = PatternFill(start_color="FFFF00", end_color="FFFF00", fill_type='solid')
                 sheet['A2'].border = Border(left=border_style, right=border_style, top=border_style, bottom=border_style)
                 sheet['A2'].alignment = Alignment(horizontal='center', vertical='center')
+
+                sheet.column_dimensions['B'].width = 50
 
         workbook.save(self.excel_file_path)
 
@@ -162,7 +164,7 @@ class ExcelGenerator:
                 summary_sheet.row_dimensions[cell.row].height = 30
                 summary_sheet.column_dimensions[cell.column_letter].width = 18
                 cell.alignment = Alignment(horizontal='center', vertical='center')
-        summary_sheet.column_dimensions['A'].width = 30
+        summary_sheet.column_dimensions['A'].width = 50
 
         workbook.save(self.excel_file_path)
 
@@ -173,24 +175,43 @@ class ExcelGenerator:
         # Select the active sheet
         for sheet_name in workbook.sheetnames:
             sheet = workbook[sheet_name]
+
             # Extract the critical rows and rearrange them (replace with your logic)
             important_rows = []
 
             for row in range(1, sheet.max_row + 1):
-                # Perform your logic to identify important rows
-                # For example, let's say rows with certain criteria are considered important
                 if (
                     sheet.cell(row=row, column=1).value == 'NumberOfFramesCheck'
-                    or sheet.cell(row=row, column=1).value == 'flexx2_ir_depth_consistency_check'
-                    or sheet.cell(row=row, column=1).value == 'kinect_ir_depth_consistency_check'
+
                 ):
                     important_rows.append(sheet[row])
                     sheet.delete_rows(row)
 
                 if (
                     sheet.cell(row=row, column=2).value == 'NumberOfFramesCheck'
-                    or sheet.cell(row=row, column=1).value == 'flexx2_ir_depth_consistency_check'
-                    or sheet.cell(row=row, column=1).value == 'kinect_ir_depth_consistency_check'
+                ):
+                    important_rows.append(sheet[row])
+                    sheet.delete_rows(row)
+
+            
+                # Perform your logic to identify important rows
+                # For example, let's say rows with certain criteria are considered important
+            for row in range(1, sheet.max_row + 1):
+                if (
+                    sheet.cell(row=row, column=1).value == 'flexx2_ir_depth_frame_number_consistency_check'
+                    or sheet.cell(row=row, column=1).value == 'flexx2_ir_depth_timestamps_consistency_check'
+                    or sheet.cell(row=row, column=1).value == 'kinect_ir_depth_frame_number_consistency_check'
+                    or sheet.cell(row=row, column=1).value == 'kinect_ir_depth_timestamps_consistency_check'
+
+                ):
+                    important_rows.append(sheet[row])
+                    sheet.delete_rows(row)
+
+                if (
+                    sheet.cell(row=row, column=1).value == 'flexx2_ir_depth_frame_number_consistency_check'
+                    or sheet.cell(row=row, column=1).value == 'flexx2_ir_depth_timestamps_consistency_check'
+                    or sheet.cell(row=row, column=1).value == 'kinect_ir_depth_frame_number_consistency_check'
+                    or sheet.cell(row=row, column=1).value == 'kinect_ir_depth_timestamps_consistency_check'
                 ):
                     important_rows.append(sheet[row])
                     sheet.delete_rows(row)

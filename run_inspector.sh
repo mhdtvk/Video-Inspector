@@ -6,6 +6,9 @@ echo -e "\nEnter the configuration setting: \n"
 
 # Input folder path
 while [ -z "$folder_path" ]; do
+    
+    echo -e "\n#[INFO]: Template: Sensor path: /home/mt/Public/1/0001/105917/color.kinect"
+    echo -e "\n#[INFO]: The path you should enter : /home/mt/Public/1 "
     echo -e "\nFolder Path ? "
     read folder_path
 done

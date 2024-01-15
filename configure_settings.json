@@ -1,7 +1,8 @@
 {
   "threshold": {
     "description": "The values entered represent the threshold for unusual occurrences compared to the entire recorded dataset. Errors are reported for the amount of unusual data that exceeds this threshold. These values are expressed as a 'Percentage'.",
-    "IrDepthConsistencyCheck": 1,
+    "IrDepthFrameNumberConsistencyCheck": 1,
+    "IrDepthTimestampsConsistencyCheck" : 98,
     "RawSizeCheck": 15,
     "NumberOfFramesCheck": 1,
     "VRecordDurationCheck": 15,

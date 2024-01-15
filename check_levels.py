@@ -37,7 +37,7 @@ class SetConfigurationSetting:
 
     def read_config_data(self) :
     #Read data from the JSON file
-        with open('Configure settings.json', 'r') as json_file:
+        with open('configure_settings.json', 'r') as json_file:
          self.config_data = json.load(json_file)
 
     def set_threshold(self,checker_name:str) -> int :
@@ -429,8 +429,8 @@ class EmptyFilesCheck(Check):
         super().serialize()
         return self.report
 
-class IrDepthConsistencyCheck(Check):
-    """Class for checking consistency between IR and depth sensors."""
+class IrDepthFrameNumberConsistencyCheck(Check):
+    """Class for checking consistency between IR and depth sensors Frame Numbers. """
 
     def __init__(self, data: dict, file_name, path: str, second_sensor_path):
         """Initialize the IrDepthConsistencyCheck class."""
@@ -454,7 +454,7 @@ class IrDepthConsistencyCheck(Check):
         self.second_sensor_exp_frm_num = None
         self.second_sensor_recorded_frame_num = None
 
-        self.difference_trsh = set_config.set_threshold("IrDepthConsistencyCheck")  # %
+        self.difference_threshold = set_config.set_threshold("IrDepthFrameNumberConsistencyCheck")  # %
         self.difference = None  # the
 
     def run(self) -> bool:
@@ -480,7 +480,7 @@ class IrDepthConsistencyCheck(Check):
 
         self.difference = (abs(1 - (self.first_sensor_recorded_frame_num / self.second_sensor_recorded_frame_num)) * 100)
 
-        if self.difference_trsh < self.difference:
+        if self.difference_threshold < self.difference:
             self.result = False
 
         return self.result
@@ -493,7 +493,7 @@ class IrDepthConsistencyCheck(Check):
             'second_sensor_name': self.second_sensor_name,
             'first_sensor_recorded_frame_num': self.first_sensor_recorded_frame_num,
             'second_sensor_recorded_frame_num': self.second_sensor_recorded_frame_num,
-            'Difference_trsh %': self.difference_trsh,
+            'Difference_threshold %': self.difference_threshold,
             'Difference %': self.difference
         }
         return self.report
@@ -502,6 +502,75 @@ class IrDepthConsistencyCheck(Check):
         """Serialize light information."""
         super().serialize()
         return self.report
+    
+
+class IrDepthTimestampsConsistencyCheck(Check):
+    """Class for checking consistency between IR and depth sensors Timestamps."""
+
+    def __init__(self, data: dict, file_name, path: str, second_sensor_path):
+        """Initialize the IrDepthConsistencyCheck class."""
+        super().__init__(data, path)
+        self.code = "00012"
+        self.description = "Checking to verify if ir.sensorX and depth.sensorX have the same Timestamps. "
+        self.file_name = file_name  # 00000, 00001, ...
+
+        self.first_sensor_data = data
+        self.second_sensor_data = None
+
+        self.first_sensor_path = path
+        self.second_sensor_path = second_sensor_path
+
+        self.first_sensor_name = os.path.basename(path)
+        self.second_sensor_name = os.path.basename(second_sensor_path)
+
+        self.unmatched_timestamps_number = None
+
+        self.matching_percentage_threshold = set_config.set_threshold("IrDepthTimestampsConsistencyCheck")  # %
+        self.matching_percentage = None  # the
+
+        self.first_sensor_txt_data = data[self.file_name]['txt']
+        self.second_sensor_txt_data = None
+
+    def run(self) -> bool:
+        """Run the check for consistency between sensors."""
+        second_sensor_data_manager = DataManager(self.second_sensor_path)
+        if second_sensor_data_manager.read():
+            self.second_sensor_data = second_sensor_data_manager.get_data()
+
+        self.second_sensor_txt_data = self.second_sensor_data[self.file_name]['txt']
+
+        timestemps_first_sensor = set( [sub_array[0] for sub_array in self.first_sensor_txt_data] )
+        timestemps_second_sensor = set( [sub_array[0] for sub_array in self.second_sensor_txt_data] )
+
+        intersection = timestemps_first_sensor.intersection(timestemps_second_sensor)
+        self.matching_percentage = (len(intersection) / len(timestemps_first_sensor)) * 100
+        self.unmatched_timestamps_number = len(timestemps_first_sensor) - len(intersection)
+
+
+
+        if self.matching_percentage < self.matching_percentage_threshold:
+            self.result = False
+        
+
+        return self.result
+
+    def detailed_serialize(self):
+        """Serialize detailed information."""
+        super().serialize()
+        self.report = self.report | {
+            'first_sensor_name': self.first_sensor_name,
+            'second_sensor_name': self.second_sensor_name,
+            'matching_percentage (%)': self.matching_percentage,
+            'unmatched_timestamps_number' : self.unmatched_timestamps_number,
+            'matching_percentage_threshold (%)': self.matching_percentage_threshold
+        }
+        return self.report
+
+    def light_serialize(self):
+        """Serialize light information."""
+        super().serialize()
+        return self.report
+
 
         
 class RawSizeCheck(Check):
@@ -874,26 +943,47 @@ class Checker:
                     for file_name in self.data:
                         sensor_report['File_Checking'][file_name] = {}
                         
-                        # ir_depth_consistency_check for: Kinect Sensor
+                        # ir_depth_frame_number_consistency_check for: Kinect Sensor
                         if name == 'depth.kinect':
-                            consis_check = IrDepthConsistencyCheck(self.data, file_name, os.path.join(self.path, name), os.path.join(self.path, 'ir.kinect'))
-                            consis_check_result = consis_check.run()
-                            if not consis_check_result:
+                            frm_num_consis_check = IrDepthFrameNumberConsistencyCheck(self.data, file_name, os.path.join(self.path, name), os.path.join(self.path, 'ir.kinect'))
+                            frm_num_consis_check_result = frm_num_consis_check.run()
+                            if not frm_num_consis_check_result:
                                 sensor_check_result = False
                     
-                            sensor_report['File_Checking'][file_name]['kinect_ir_depth_consistency_check'] = (consis_check.light_serialize() if self.light_mode else consis_check.detailed_serialize())
-                            self.excel_report[name]['kinect_ir_depth_consistency_check'] = consis_check_result
+                            sensor_report['File_Checking'][file_name]['kinect_ir_depth_frame_number_consistency_check'] = (frm_num_consis_check.light_serialize() if self.light_mode else frm_num_consis_check.detailed_serialize())
+                            self.excel_report[name]['kinect_ir_depth_frame_number_consistency_check'] = frm_num_consis_check_result
                     
-                        # ir_depth_consistency_check for: Flexx2 Sensor
+                        # ir_depth_frame_number_consistency_check for: Flexx2 Sensor
                         if name == 'depth.flexx2':
-                            consis_check = IrDepthConsistencyCheck(self.data, file_name, os.path.join(self.path, name), os.path.join(self.path, 'ir.flexx2'))
-                            consis_check_result = consis_check.run()
-                            if not consis_check_result:
+                            frm_num_consis_check = IrDepthFrameNumberConsistencyCheck(self.data, file_name, os.path.join(self.path, name), os.path.join(self.path, 'ir.flexx2'))
+                            frm_num_consis_check_result = frm_num_consis_check.run()
+                            if not frm_num_consis_check_result:
                                 sensor_check_result = False
                     
-                            sensor_report['File_Checking'][file_name]['flexx2_ir_depth_consistency_check'] = (consis_check.light_serialize() if self.light_mode else consis_check.detailed_serialize())
-                            self.excel_report[name]['flexx2_ir_depth_consistency_check'] = consis_check_result
+                            sensor_report['File_Checking'][file_name]['flexx2_ir_depth_frame_number_consistency_check'] = (frm_num_consis_check.light_serialize() if self.light_mode else frm_num_consis_check.detailed_serialize())
+                            self.excel_report[name]['flexx2_ir_depth_frame_number_consistency_check'] = frm_num_consis_check_result
+
+                        
+                        # ir_depth_timestamp_consistency_check for: Flexx2 Sensor
+                        if name == 'depth.flexx2':
+                            timstmp_consis_check = IrDepthTimestampsConsistencyCheck(self.data, file_name, os.path.join(self.path, name), os.path.join(self.path, 'ir.flexx2'))
+                            timstmp_consis_check_result = timstmp_consis_check.run()
+                            if not timstmp_consis_check_result:
+                                sensor_check_result = False
                     
+                            sensor_report['File_Checking'][file_name]['flexx2_ir_depth_timestamps_consistency_check'] = (timstmp_consis_check.light_serialize() if self.light_mode else timstmp_consis_check.detailed_serialize())
+                            self.excel_report[name]['flexx2_ir_depth_timestamps_consistency_check'] = timstmp_consis_check_result
+
+                        # ir_depth_timestamp_consistency_check for: Kinect Sensor
+                        if name == 'depth.kinect':
+                            timstmp_consis_check = IrDepthTimestampsConsistencyCheck(self.data, file_name, os.path.join(self.path, name), os.path.join(self.path, 'ir.kinect'))
+                            timstmp_consis_check_result = timstmp_consis_check.run()
+                            if not timstmp_consis_check_result:
+                                sensor_check_result = False
+                    
+                            sensor_report['File_Checking'][file_name]['kinect_ir_depth_timestamps_consistency_check'] = (timstmp_consis_check.light_serialize() if self.light_mode else timstmp_consis_check.detailed_serialize())
+                            self.excel_report[name]['kinect_ir_depth_timestamps_consistency_check'] = timstmp_consis_check_result
+
                         # RawSizeCheck
                         RawSize_check = RawSizeCheck(self.data[file_name], os.path.join(self.path, name))
                         RawSize_check_res = RawSize_check.run()
