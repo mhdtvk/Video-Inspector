@@ -79,7 +79,7 @@ class Inspector():
     def run(self):
         # perform check
         basename = os.path.basename(self.root_path)
-        if (basename).isdigit() and len(basename) == 4:
+        if (basename).isdigit():
             excel_report_generator = ExcelGenerator(self.excel_report_path )
 
             try:
@@ -103,7 +103,7 @@ class Inspector():
                       report_generator.run()
 
                     if self.boolean_result:
-                        self.print_in_terminal_result.append(f"Folder Name: {folders_name}\tCheck: Failed")
+                        self.print_in_terminal_result.append(f"Folder Name: {folders_name}\tCheck: Successful")
                         excel_report_generator.run(tmp_excel_report, folders_name)
                     else:
                         self.print_in_terminal_result.append(f"Folder Name: {folders_name}\tCheck: Failed")
