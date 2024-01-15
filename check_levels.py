@@ -539,12 +539,12 @@ class IrDepthTimestampsConsistencyCheck(Check):
 
         self.second_sensor_txt_data = self.second_sensor_data[self.file_name]['txt']
 
-        timestemps_first_sensor = set( [sub_array[0] for sub_array in self.first_sensor_txt_data] )
-        timestemps_second_sensor = set( [sub_array[0] for sub_array in self.second_sensor_txt_data] )
+        timestamps_first_sensor = set( [sub_array[0] for sub_array in self.first_sensor_txt_data] )
+        timestamps_second_sensor = set( [sub_array[0] for sub_array in self.second_sensor_txt_data] )
 
-        intersection = timestemps_first_sensor.intersection(timestemps_second_sensor)
-        self.matching_percentage = (len(intersection) / len(timestemps_first_sensor)) * 100
-        self.unmatched_timestamps_number = len(timestemps_first_sensor) - len(intersection)
+        intersection = timestamps_first_sensor.intersection(timestamps_second_sensor)
+        self.matching_percentage = (len(intersection) / len(timestamps_first_sensor)) * 100
+        self.unmatched_timestamps_number = len(timestamps_first_sensor) - len(intersection)
 
 
 
