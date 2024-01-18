@@ -5,9 +5,9 @@
 [![Build Status](https://img.shields.io/travis/user/repo/master.svg)](https://travis-ci.org/user/repo)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
-# Inspector
+# Inspector Project
 
-Inspector is a Python program designed to check the performance of built-in sensors and files recorded by audio and video sensors. It aims to find bugs, issues, or unusual events and is intended for use as part of a larger project.
+Inspector is a Python program designed to check the performance of the sensors and files recorded by audio and video sensors. It aims to find bugs, issues, or unusual events and is intended for use as part of a larger project.
 
 ## Technologies and Libraries
 
@@ -93,7 +93,7 @@ Inspector is a private project, but contributions, comments, and changes can be 
 All assets and code are under the MIT License.
 
 ## Additional Resources
-All intellectual and material rights of this project belong to [EVS Technology Company](https://www.embeddedvisionsystems.it/). For more information, visit [EVS Technology Company's website](https://www.embeddedvisionsystems.it/).
+All rights of this project belong to [EVS Technology Company](https://www.embeddedvisionsystems.it/). For more information, visit [EVS Technology Company's website](https://www.embeddedvisionsystems.it/).
 
 
 
