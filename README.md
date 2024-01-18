@@ -1,4 +1,6 @@
 
+![stronghold logo](https://github.com/omarzandona/record_inspector/assets/37227181/3fe37146-3d36-497d-b79d-2bf34e9bc6e8)
+
 ## Badges
 [![Build Status](https://img.shields.io/travis/user/repo/master.svg)](https://travis-ci.org/user/repo)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
