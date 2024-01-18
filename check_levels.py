@@ -30,6 +30,14 @@ def get_folder_and_file_sizes(root_folder: str) -> dict:
 
 
 class SetConfigurationSetting:
+    """
+    Import the 'configure_settings.json' file that contain the setting that should use in our Checkers.
+        and save the data as a dictionary with Json style.
+    For example: - Threshold of each level of check.
+    Moudels:
+    - read_config_data : Prepare configuration setting data.
+    - set_threshold    : Return the threshold by take the checker name.
+    """
 
     def __init__(self) -> None:
         self.read_config_data()
@@ -632,15 +640,16 @@ class NumberOfFramesCheck(Check):
         self.description = "Checking the number of frames captured by the sensor"
         self.exp_frm_num = None
         self.recorded_frame_num = None
-        self.frame_lost_num = None
+        self.difference_num_frame = None
         self.difference = None
 
     def run(self) -> bool:
+
         """Run the check for number of frames."""
         index_s = self.meta_data['duration'].find('s')
         self.exp_frm_num = (int(self.meta_data['duration'][:index_s]) * int(self.meta_data['framerate']))
         self.recorded_frame_num = (np.shape(self.txt_data))[0]
-        self.frame_lost_num = abs(self.exp_frm_num - self.recorded_frame_num)
+        self.difference_num_frame = abs(self.exp_frm_num - self.recorded_frame_num)
         self.difference = (abs(1 - self.recorded_frame_num / self.exp_frm_num) * 100)
         if self.difference_trsh < self.difference:
             self.result = False
@@ -652,8 +661,8 @@ class NumberOfFramesCheck(Check):
         super().serialize()
         self.report = self.report | {'exp_frm_num': self.exp_frm_num,
                                      'recorded_frame_num': self.recorded_frame_num,
-                                     'frame_lost_num': self.frame_lost_num,
-                                     'Difference_trsh %': self.difference_trsh,
+                                     'difference_num_frame': self.difference_num_frame,
+                                     'Difference_threshold %': self.difference_trsh,
                                      'Difference %': self.difference}
         return self.report
 
@@ -700,7 +709,7 @@ class VRecordDurationCheck(Check):
         super().serialize()
         self.report = self.report | {'exp_rec_duration (ms)': self.exp_rec_duration,
                                      'act_rec_duration (ms)': self.act_rec_duration,
-                                     'Difference_trsh %': self.difference_trsh,
+                                     'Difference_threshold %': self.difference_trsh,
                                      'Difference %': self.difference}
         return self.report
 
