@@ -80,16 +80,16 @@ For example, if the FPS (frames per second) in a recorded video is lower than th
             result = False
 ```
 
-##File Structure
+## File Structure
 The project files and directory are organized, and the results (Excel and JSON reports) are placed in a user-chosen path.
 
-##Contributions
+## Contributions
 Inspector is a private project, but contributions, comments, and changes can be suggested through issues and pull requests for those with repository access.
 
-##License
+## License
 All assets and code are under the MIT License.
 
-##Additional Resources
+## Additional Resources
 All intellectual and material rights of this project belong to [EVS Technology Company](https://www.embeddedvisionsystems.it/). For more information, visit [EVS Technology Company's website](https://www.embeddedvisionsystems.it/).
 
 
