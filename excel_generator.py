@@ -1,3 +1,16 @@
+
+"""!
+@file
+
+@brief The `excel_generator` package simplifies the process of generating Excel reports for troubleshooting.
+
+@package excel_generator
+This class utilizes the `openpyxl` and `pandas` libraries to create, manipulate, and style Excel workbooks.
+
+"""
+## @defgroup excel_generator excel_generator.py
+#@{
+
 try:
     from openpyxl import Workbook, load_workbook
     from openpyxl.styles import PatternFill, Border, Side, Alignment,NamedStyle
@@ -9,19 +22,45 @@ except ImportError as e:
     print(f"Error: {e}")
     exit(1)
 
-
 class ExcelGenerator:
+    """!
+    @brief Class for preparing data and generating Excel reports.
+
+    Methods:
+    - `__init__(excel_path: str)`: Initializes the ExcelGenerator class.
+    - `creating_directory()`: Ensures the existence of the directory for the Excel file.
+    - `remove_default_sheet()`: Removes the default 'Sheet' from the Excel file.
+    - `create_or_load_workbook()`: Creates a new workbook or loads an existing one.
+    - `convert_data_to_excel(workbook, report: dict, name: str)`: Converts data to an Excel sheet.
+    - `design_excel()`: Enhances Excel file readability through formatting.
+    - `run(report: dict, name: str)`: Processes and saves a report for a specific sensor type.
+    - `create_summary_sheet()`: Creates a summary sheet aggregating false checks.
+    - `rearrange_critical_rows()`: Rearranges critical rows based on predefined criteria.
+    """
+    
     def __init__(self, excel_path: str):
+        """!
+        @brief Initializes the ExcelGenerator class.
+
+        @param excel_path (str): The path where the Excel report should be saved.
+        """
         self.excel_file_path = f"{excel_path}_Excel_Report.xlsx"
         self.false_check = {}
         self.df = None
         self.creating_directory()
 
     def creating_directory(self):
+        """! 
+        @brief Ensures the directory for the Excel file exists; creates it if not.
+        """
         if not os.path.exists(os.path.dirname(self.excel_file_path) ):
               os.makedirs(os.path.dirname(self.excel_file_path))
 
     def remove_default_sheet(self):
+        """
+        @brief Removes the default 'Sheet' from the Excel file.
+        """
+
         try:
             workbook = load_workbook(self.excel_file_path)
             if 'Sheet' in workbook.sheetnames:
@@ -31,6 +70,11 @@ class ExcelGenerator:
             pass  # No need to remove if the file doesn't exist yet
 
     def create_or_load_workbook(self):
+        """
+        @brief Creates a new workbook or loads an existing one.
+        """
+
+
         self.remove_default_sheet()
         try:
             workbook = load_workbook(self.excel_file_path)
@@ -40,6 +84,11 @@ class ExcelGenerator:
         return workbook
 
     def convert_data_to_excel(self,workbook, report: dict, name: str):
+        """
+        @brief  Converts the provided data dictionary to an Excel sheet in the workbook.
+        """
+
+
          # Create a new sheet and add the DataFrame
         sheet = workbook.create_sheet(title=name)
         self.df = pd.DataFrame.from_dict(report)
@@ -50,6 +99,10 @@ class ExcelGenerator:
         return workbook
     
     def design_excel(self) :
+        """
+        @brief Formats the Excel sheet with color-coding and styling.
+        """
+
         workbook = load_workbook(self.excel_file_path)
 
         # Select the active sheet
@@ -117,6 +170,12 @@ class ExcelGenerator:
         workbook.save(self.excel_file_path)
 
     def run(self, report: dict, name: str):
+        """
+        @brief Processes and saves the report for a specific sensor type.
+
+        @param report (dict): The data dictionary to be processed.
+        @param name (str): The name of the sensor type.
+        """
         self.false_check[name] = {}
         # Load existing or create a new workbook
         workbook = self.create_or_load_workbook()
@@ -138,6 +197,10 @@ class ExcelGenerator:
         workbook.save(self.excel_file_path)
 
     def create_summary_sheet(self):
+        """
+        @brief Creates a summary sheet aggregating false checks.
+        """
+
         workbook = load_workbook(self.excel_file_path)
         if "Summary" in workbook.sheetnames:
             # Delete the existing sheet with the same name
@@ -169,6 +232,10 @@ class ExcelGenerator:
         workbook.save(self.excel_file_path)
 
     def rearrange_critical_rows(self):
+        """
+        @brief Rearranges critical rows based on predefined criteria.
+        """
+
         # Load the Excel file
         workbook = load_workbook(self.excel_file_path)
 
@@ -225,3 +292,4 @@ class ExcelGenerator:
         # Save the modified workbook
         workbook.save(self.excel_file_path)
 
+# @} ##

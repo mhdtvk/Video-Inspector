@@ -1,10 +1,28 @@
 
+"""!
+@file
+@brief Checker for troubleshooting issues within recorded files.
+
+This module performs various troubleshooting steps on files, returning results. 
+It includes classes representing different review stages, forming a tree structure 
+from the root directory to individual files. All check steps inherit from a parent class, 'Check.' 
+The main class, 'Checker,' manages sensors and calls these check classes. 
+Utility functions are defined to assist package operations.
+
+@package check_levels
+@author Mahdi
+"""
+
+## @defgroup Check_Levels check_levels.py
+#@{
+
 try:
     from typing import Any
     import numpy as np
     import os
     import json
     import re
+    from overall_report_generator import *
 
 except ImportError as e:
     print(f"Error: {e}")
@@ -12,13 +30,13 @@ except ImportError as e:
 
 
 def get_folder_and_file_sizes(root_folder: str) -> dict:
+    """!
+    @brief Retrieve sizes of folders and files in the specified root folder.
+
+    @param root_folder: Path to the root folder.
+    @return folder_sizes: Dictionary with folder/file names as keys and their sizes as values.
     """
-    Get the sizes of folders and files in the specified root folder.
-    Args:
-    - root_folder (str): Path to the root folder.
-    Returns:
-    - folder_sizes (dict): Dictionary containing folder/file names as keys and their respective sizes as values.
-    """
+
     folder_or_files_sizes = {}
     for item in os.listdir(root_folder):
         item_path = os.path.join(root_folder, item)
@@ -30,25 +48,32 @@ def get_folder_and_file_sizes(root_folder: str) -> dict:
 
 
 class SetConfigurationSetting:
-    """
-    Import the 'configure_settings.json' file that contain the setting that should use in our Checkers.
-        and save the data as a dictionary with Json style.
-    For example: - Threshold of each level of check.
-    Moudels:
-    - read_config_data : Prepare configuration setting data.
-    - set_threshold    : Return the threshold by take the checker name.
+    """!
+    @brief Import the 'configure_settings.json' file containing settings for use in our Checkers.
+
+    This class reads the 'configure_settings.json' file and stores the data as a dictionary in JSON style.
+    The data includes, for example, the threshold for each level of check.
     """
 
     def __init__(self) -> None:
+        
+        #Class constructor. Initializes the configuration data.
+        
         self.read_config_data()
         self.config_data = {}
 
     def read_config_data(self) :
-    #Read data from the JSON file
-        with open('configure_settings.json', 'r') as json_file:
+        #Read data from the 'configure_settings.json' file.
+           
+        with open(os.path.join(os.path.dirname(__file__), 'configure_settings.json'), 'r') as json_file:
          self.config_data = json.load(json_file)
 
     def set_threshold(self,checker_name:str) -> int :
+        
+        # Return the threshold for a given checker name.
+        # param checker_name: The name of the checker for which the threshold is requested.
+        # return: The threshold value.
+        
         return self.config_data['threshold'][checker_name]    
 
 # Import configuration file
@@ -56,27 +81,33 @@ set_config = SetConfigurationSetting()
 set_config.read_config_data()   
 
 class DataManager:
-    """
-    Class for importing data from a specified path.
+    """!
+    @brief Class for importing data from a specified path.
+
+    This class provides functionality to read data from various file types
+    and populate DataManager attributes. It also includes a method to prepare
+    data for saving.
+
+    @note Ensure that the necessary files (meta, txt, rawa, rawv) are present
+          with corresponding basenames in the specified path.
     """
 
     def __init__(self, path: str = "mypath"):
-        """
-        Initialize DataManager with a specified path and empty attributes.
-        Args:
-        - path (str): Path to the data directory.
-        """
+        
+        # Initialize DataManager with a specified path and empty attributes.#
+        #param path: Path to the data directory.
+        
         self.path = path
         self.time = ''
         self.data = {}
         self.check_result = True
 
     def read(self) -> bool:
-        """
-        Read data from various file types and populate DataManager attributes.
-        Returns:
-        - ret (bool): True if data reading is successful, False otherwise.
-        """
+        #""!
+        #brief Read data from various file types and populate DataManager attributes.
+
+        #return: True if data reading is successful, False otherwise.
+        #""
         data_managing_is_successful = True
 
         if not self._prepare_data_for_saving():
@@ -94,6 +125,10 @@ class DataManager:
         return data_managing_is_successful
 
     def _prepare_data_for_saving(self) -> bool :
+        #""!
+        #brief Prepare data for saving by identifying valid sets of files.#
+        #return: True if valid data sets are identified, False otherwise.
+        #""
 
         recorded_files = os.listdir(self.path)
         recorded_basename = {os.path.splitext(file)[0] for file in recorded_files}
@@ -105,11 +140,11 @@ class DataManager:
         return bool(self.data)
     
     def _read_raw_data(self) -> bool:
-        """
-        Read raw data files (.rawv, .rawa) and populate DataManager data attribute.
-        Returns:
-        - ret (bool): True if reading raw data is successful, False otherwise.
-        """
+        #""!
+        #brief Read raw data files (.rawv, .rawa) and populate DataManager data attribute.
+
+        #return: True if reading raw data is successful, False otherwise.
+        #""
         ret = True
         for filename in self.data:
                 data = []
@@ -122,11 +157,12 @@ class DataManager:
         return ret
 
     def _read_txt_data(self) -> bool:
-        """
-        Read .txt data files and populate DataManager data attribute.
-        Returns:
-        - ret (bool): True if reading .txt data is successful, False otherwise.
-        """
+        #""!
+        #brief Read .txt data files and populate DataManager data attribute.
+
+        #return: True if reading .txt data is successful, False otherwise.
+        #""
+
         ret = True
         for filename in self.data:
             data = []
@@ -144,11 +180,11 @@ class DataManager:
         return ret
 
     def _read_metadata(self) -> bool:
-        """
-        Read .meta files and populate DataManager data attribute.
-        Returns:
-        - ret (bool): True if reading .meta files is successful, False otherwise.
-        """
+        #""!
+        #brief Read .meta files and populate DataManager data attribute.
+
+        #return: True if reading .meta files is successful, False otherwise.
+        #""
         ret = True
         for filename in self.data:
                 data = {}
@@ -165,19 +201,33 @@ class DataManager:
         return ret
 
     def get_data(self) -> dict:
-        """
-        Get the DataManager data attribute.
-        Returns:
-        - self.data (dict): Dictionary containing collected data.
-        """
+        #""
+        #brief Get the DataManager data attribute.
+
+        #return: Dictionary containing collected data.
+        #""
         return self.data
 
 
 class Check:
+    """!
+    @brief Parent class for each level of checking.
+
+    This class serves as the parent for individual check levels. It includes
+    attributes for storing information about the check, such as code, description,
+    result, and a report. The class also provides a method to serialize check results
+    into a report.
+
+    @note Subclasses should override the 'run_check' method to implement specific checks.
     """
-    Parent class for each level of checking.
-    """
+
     def __init__(self, data: dict, path: str):
+        #""!
+        #brief Class constructor.
+
+        #param data: Dictionary containing collected data.
+        #param path: Path to the data directory.
+        #""
         self.path = path
         self.code = None
         self.description = None
@@ -185,19 +235,33 @@ class Check:
         self.report = {}
 
     def serialize(self) -> dict:
-        """
-        Serialize check results into a report.
-        Returns:
-        - self.report (dict): Report containing check details.
-        """
+        #""!
+        #brief Serialize check results into a report.
+
+        #return: Report containing check details.
+        #""
         self.report = self.report | {'code': self.code, "description": self.description, "Result": self.result}
         return self.report
 
+
 class AbnormalFolderInRootCheck(Check):
+    """!
+    @brief Class for checking abnormal folders in the root directory.
+
+    This class is a subclass of the Check class and focuses on checking
+    for abnormal folders in the root directory. It includes methods for running
+    the check, serializing detailed and light check results into reports.
+
+    @note Subclasses should override the 'run' method to implement specific checks.
     """
-    Class for checking abnormal folders in the root directory.
-    """
+
     def __init__(self, data: dict, path: str):
+        #""!
+        #brief Class constructor.
+
+        #param data: Dictionary containing collected data.
+        #param path: Path to the data directory.
+        #""
         super().__init__(data, path)
         self.code = "00001"
         self.description = "Checking the Root Folder for abnormal Files or Folders"
@@ -205,11 +269,11 @@ class AbnormalFolderInRootCheck(Check):
         self.unexp_file = ''
 
     def run(self) -> bool:
-        """
-        Run the check to identify unexpected files.
-        Returns:
-        - self.result (bool): True if no unexpected files found, False otherwise.
-        """
+        #""!
+        #brief Run the check to identify unexpected files.
+
+        #return: True if no unexpected files found, False otherwise.
+        #""
         for name in os.listdir(self.path):
             if name.lower() not in ('audio.kinect', 'color.kinect', 'depth.kinect', 'ir.kinect', 'audio.i2smems', 'depth.flexx2', 'ir.flexx2', 'thermal.lepton'):
                 self.num_unexp_file += 1 
@@ -220,40 +284,54 @@ class AbnormalFolderInRootCheck(Check):
         return self.result
     
     def detailed_serialize(self) -> dict:
-        """
-        Serialize detailed check results into a report.
-        Returns:
-        - self.report (dict): Detailed report containing unexpected file details.
-        """
+        #""!
+        #brief Serialize detailed check results into a report.
+
+        #return: Detailed report containing unexpected file details.
+        #""
         super().serialize()
         self.report = self.report | {'num_unexp_file': self.num_unexp_file, 'unexp_file': self.unexp_file}
         return self.report
     
     def light_serialize(self) -> dict:
-        """
-        Serialize light check results into a report.
-        Returns:
-        - self.report (dict): Light report containing basic check details.
-        """
+        #""!
+        #brief Serialize light check results into a report.
+
+        #return: Light report containing basic check details.
+        #""
         super().serialize()
         return self.report
 
+
 class EmptyFileInRootCheck(Check):
+    """!
+    @brief Class for checking empty files in the root directory.
+
+    This class is a subclass of the Check class and focuses on checking
+    for empty files in the root directory. It includes methods for running
+    the check, serializing detailed and light check results into reports.
+
+    @note Subclasses should override the 'run' method to implement specific checks.
     """
-    Class for checking empty files in the root directory.
-    """
+
     def __init__(self, data: dict, path: str):
+        #""!
+        #brief Class constructor.
+
+        #param data: Dictionary containing collected data.
+        #param path: Path to the data directory.
+        #""
         super().__init__(data, path)
         self.code = "00002"
         self.description = "Checking the Root Folder for abnormal Folder Size"
         self.zero_size_folder = ''
 
     def run(self) -> bool:
-        """
-        Run the check to identify folders with zero size.
-        Returns:
-        - self.result (bool): True if no zero-size folders found, False otherwise.
-        """
+        #""!
+        #brief Run the check to identify folders with zero size.
+
+        #return: True if no zero-size folders found, False otherwise.
+        #""
         sizes = get_folder_and_file_sizes(self.path)
         for name in sizes:
             if sizes[name] == 0:
@@ -262,31 +340,46 @@ class EmptyFileInRootCheck(Check):
         return self.result
     
     def detailed_serialize(self) -> dict:
-        """
-        Serialize detailed check results into a report.
-        Returns:
-        - self.report (dict): Detailed report containing folders with zero size.
-        """
+        #""!
+        #brief Serialize detailed check results into a report.
+
+        #return: Detailed report containing folders with zero size.
+        #""
         super().serialize()
         self.report = self.report | {'zero_size_folder': self.zero_size_folder}
         return self.report
 
     def light_serialize(self) -> dict:
-        """
-        Serialize light check results into a report.
-        Returns:
-        - self.report (dict): Light report containing basic check details.
-        """
+        #""!
+        #brief Serialize light check results into a report.
+
+        #return: Light report containing basic check details.
+        #""
         super().serialize()
         return self.report
 
 
 
+
 class NumberOfFilesCheck(Check):
-    """Class for checking the number of files."""
-    
+    """!
+    @brief Class for checking the number of files.
+
+    This class is a subclass of the Check class and focuses on checking
+    the number of expected files against the actual number of files
+    present in the specified path. It includes methods for running
+    the check, serializing detailed and light check results into reports.
+
+    @note Subclasses should override the 'run' method to implement specific checks.
+    """
+
     def __init__(self, data: dict, path: str):
-        """Initialize the NumberOfFilesCheck class."""
+        #""!
+        #brief Class constructor.
+
+        #param data: Dictionary containing collected data.
+        #param path: Path to the data directory.
+        #""
         super().__init__(data, path)
         self.meta_data = data['00000000']['meta']
         self.code = "00101"
@@ -301,7 +394,11 @@ class NumberOfFilesCheck(Check):
         self.num_txt_found_files = 0
 
     def run(self) -> bool:
-        """Run the number of files check."""
+        #""!
+        #brief Run the number of files check.
+
+        #return: True if the number of files check is successful, False otherwise.
+        #""
         self.num_file_found = len(os.listdir(self.path))
 
         pattern = re.compile(r'file:\s+\d+/(\d+)')
@@ -310,8 +407,8 @@ class NumberOfFilesCheck(Check):
         match = pattern.search(txt_meta_data)
         
         if match:
-        # Extract the value before the slash from the match
-            file_value =int( match.group(1))
+            # Extract the value before the slash from the match
+            file_value = int(match.group(1))
 
         self.num_exp_file = 3 * file_value
 
@@ -344,8 +441,13 @@ class NumberOfFilesCheck(Check):
 
         return self.result
 
-    def detailed_serialize(self):
-        """Serialize detailed information."""
+    def detailed_serialize(self) -> dict:
+        #""!
+        #brief Serialize detailed check results into a report.
+
+        #return: Detailed report containing information about expected
+        #        and found files.
+        #""
         super().serialize()
         self.report = self.report | {
             "num_exp_file": self.num_exp_file,
@@ -359,26 +461,38 @@ class NumberOfFilesCheck(Check):
         }
         return self.report
 
-    def light_serialize(self):
-        """Serialize light information."""
+    def light_serialize(self) -> dict:
+        #""!
+        #brief Serialize light check results into a report.
+
+        #return: Light report containing basic check details.
+        #""
         super().serialize()
         return self.report
 
-        
+     
 
 class UnexpectedFileCheck(Check):
-    """Class for checking unexpected file types."""
-    
+    """!
+    @brief Class for checking unexpected file types.
+
+    This class is a subclass of the Check class and focuses on checking
+    the types of files in the specified path. It includes methods for running
+    the check, serializing detailed and light check results into reports.
+
+    @note Subclasses should override the 'run' method to implement specific checks.
+    """
+
     def __init__(self, data, path: str):
-        """Initialize the UnexpectedFileCheck class."""
+    
         super().__init__(data, path)
         self.code = "00102"
         self.description = "Check type of files"
         self.num_unexp_file = 0
         self.unexp_file = ''
 
-    def run(self):
-        """Run the check for unexpected files."""
+    def run(self) -> bool:
+        
         for name in os.listdir(self.path):
             if not (name.lower().endswith(('.meta', '.rawv', '.rawa', '.txt'))):
                 self.num_unexp_file += 1
@@ -388,8 +502,8 @@ class UnexpectedFileCheck(Check):
         
         return self.result
 
-    def detailed_serialize(self):
-        """Serialize detailed information."""
+    def detailed_serialize(self) -> dict:
+        
         super().serialize()
         self.report = self.report |  {
             'num_unexp_file': self.num_unexp_file,
@@ -397,24 +511,33 @@ class UnexpectedFileCheck(Check):
         }
         return self.report
      
-    def light_serialize(self):
-        """Serialize light information."""
+    def light_serialize(self) -> dict:
+        
         super().serialize()
         return self.report
 
 
+
 class EmptyFilesCheck(Check):
-    """Class for checking empty files."""
-    
+    """!
+    @brief Class for checking empty files.
+
+    This class is a subclass of the Check class and focuses on checking
+    the size of files in the specified path. It includes methods for running
+    the check, serializing detailed and light check results into reports.
+
+    @note Subclasses should override the 'run' method to implement specific checks.
+    """
+
     def __init__(self, data, path: str):
-        """Initialize the EmptyFilesCheck class."""
+        
         super().__init__(data, path)
         self.code = "00103"
         self.description = "Check size of files"
         self.zero_size_file = ' '
 
-    def run(self):
-        """Run the check for empty files."""
+    def run(self) -> bool:
+         
         w = os.walk(self.path)
         for (dirpath, dirnames, filenames) in w:
             for file in filenames:
@@ -424,24 +547,29 @@ class EmptyFilesCheck(Check):
                     self.zero_size_file += (file + ' , ')
         return self.result
     
-    def detailed_serialize(self):
-        """Serialize detailed information."""
+    def detailed_serialize(self) -> dict:
+         
         super().serialize()
         self.report = self.report | {
             'zero_size_file': self.zero_size_file
         }
         return self.report
     
-    def light_serialize(self):
-        """Serialize light information."""
+    def light_serialize(self) -> dict:
+         
         super().serialize()
         return self.report
 
+
 class IrDepthFrameNumberConsistencyCheck(Check):
-    """Class for checking consistency between IR and depth sensors Frame Numbers. """
+    """!
+    @brief Class for checking consistency between IR and depth sensors Frame Numbers.
+
+    This class checks if IR and depth sensors (e.g., ir.sensorX and depth.sensorX) have the same number of frames.
+    """
 
     def __init__(self, data: dict, file_name, path: str, second_sensor_path):
-        """Initialize the IrDepthConsistencyCheck class."""
+         
         super().__init__(data, path)
         self.code = "00011"
         self.description = "Checking to verify if ir.sensorX and depth.sensorX have the same number of frames"
@@ -466,7 +594,7 @@ class IrDepthFrameNumberConsistencyCheck(Check):
         self.difference = None  # the
 
     def run(self) -> bool:
-        """Run the check for consistency between sensors."""
+         
         second_sensor_data_manager = DataManager(self.second_sensor_path)
         if second_sensor_data_manager.read():
             self.second_sensor_data = second_sensor_data_manager.get_data()
@@ -493,8 +621,8 @@ class IrDepthFrameNumberConsistencyCheck(Check):
 
         return self.result
 
-    def detailed_serialize(self):
-        """Serialize detailed information."""
+    def detailed_serialize(self) -> dict:
+         
         super().serialize()
         self.report = self.report | {
             'first_sensor_name': self.first_sensor_name,
@@ -506,20 +634,25 @@ class IrDepthFrameNumberConsistencyCheck(Check):
         }
         return self.report
 
-    def light_serialize(self):
-        """Serialize light information."""
+    def light_serialize(self) -> dict:
+         
         super().serialize()
         return self.report
+
     
 
 class IrDepthTimestampsConsistencyCheck(Check):
-    """Class for checking consistency between IR and depth sensors Timestamps."""
+    """!
+    @brief Class for checking consistency between IR and depth sensors Timestamps.
+
+    This class checks if IR and depth sensors (e.g., ir.sensorX and depth.sensorX) have the same timestamps.
+    """
 
     def __init__(self, data: dict, file_name, path: str, second_sensor_path):
-        """Initialize the IrDepthConsistencyCheck class."""
+         
         super().__init__(data, path)
         self.code = "00012"
-        self.description = "Checking to verify if ir.sensorX and depth.sensorX have the same Timestamps. "
+        self.description = "Checking to verify if ir.sensorX and depth.sensorX have the same timestamps. "
         self.file_name = file_name  # 00000, 00001, ...
 
         self.first_sensor_data = data
@@ -540,52 +673,54 @@ class IrDepthTimestampsConsistencyCheck(Check):
         self.second_sensor_txt_data = None
 
     def run(self) -> bool:
-        """Run the check for consistency between sensors."""
+         
         second_sensor_data_manager = DataManager(self.second_sensor_path)
         if second_sensor_data_manager.read():
             self.second_sensor_data = second_sensor_data_manager.get_data()
 
         self.second_sensor_txt_data = self.second_sensor_data[self.file_name]['txt']
 
-        timestamps_first_sensor = set( [sub_array[0] for sub_array in self.first_sensor_txt_data] )
-        timestamps_second_sensor = set( [sub_array[0] for sub_array in self.second_sensor_txt_data] )
+        timestamps_first_sensor = set([sub_array[0] for sub_array in self.first_sensor_txt_data])
+        timestamps_second_sensor = set([sub_array[0] for sub_array in self.second_sensor_txt_data])
 
         intersection = timestamps_first_sensor.intersection(timestamps_second_sensor)
         self.matching_percentage = (len(intersection) / len(timestamps_first_sensor)) * 100
         self.unmatched_timestamps_number = len(timestamps_first_sensor) - len(intersection)
 
-
-
         if self.matching_percentage < self.matching_percentage_threshold:
             self.result = False
-        
 
         return self.result
 
-    def detailed_serialize(self):
-        """Serialize detailed information."""
+    def detailed_serialize(self) -> dict:
+         
         super().serialize()
         self.report = self.report | {
             'first_sensor_name': self.first_sensor_name,
             'second_sensor_name': self.second_sensor_name,
             'matching_percentage (%)': self.matching_percentage,
-            'unmatched_timestamps_number' : self.unmatched_timestamps_number,
+            'unmatched_timestamps_number': self.unmatched_timestamps_number,
             'matching_percentage_threshold (%)': self.matching_percentage_threshold
         }
         return self.report
 
-    def light_serialize(self):
-        """Serialize light information."""
+    def light_serialize(self) -> dict:
+         
         super().serialize()
         return self.report
 
 
+
         
 class RawSizeCheck(Check):
-    """Class to check the size of raw files."""
+    """!
+    @brief Class to check the size of raw files.
+
+    This class checks the size of raw files and compares it with the expected size based on metadata.
+    """
 
     def __init__(self, data: dict, path: str):
-        """Initialize the RawSizeCheck class."""
+         
         super().__init__(data, path)
         self.meta_data = data['meta']
         self.txt_data = data['txt']
@@ -596,8 +731,8 @@ class RawSizeCheck(Check):
         self.description = "Check size of raw files"
         self.raw_file_detail = {}
 
-    def run(self):
-        """Run the check for raw file size."""
+    def run(self) -> bool:
+         
         frames_byte = [sublist[1] for sublist in self.txt_data]
         exp_size = (np.sum(frames_byte)) / 1024
         w = os.walk(self.path)
@@ -614,23 +749,28 @@ class RawSizeCheck(Check):
 
         return self.result
 
-    def detailed_serialize(self):
-        """Serialize detailed information."""
+    def detailed_serialize(self) -> dict:
+         
         super().serialize()
         self.report = self.report | {'raw_file_detail': self.raw_file_detail}
         return self.report
 
-    def light_serialize(self):
-        """Serialize light information."""
+    def light_serialize(self) -> dict:
+         
         super().serialize()
         return self.report
 
 
+
 class NumberOfFramesCheck(Check):
-    """Class to check the number of frames captured by the sensor."""
+    """
+    @brief Class to check the number of frames captured by the sensor.
+
+    This class checks the number of frames captured by the sensor and compares it with the expected number based on metadata.
+    """
 
     def __init__(self, data: dict, path: str):
-        """Initialize the NumberOfFramesCheck class."""
+         
         super().__init__(data, path)
         self.meta_data = data['meta']
         self.txt_data = data['txt']
@@ -644,8 +784,7 @@ class NumberOfFramesCheck(Check):
         self.difference = None
 
     def run(self) -> bool:
-
-        """Run the check for number of frames."""
+         
         index_s = self.meta_data['duration'].find('s')
         self.exp_frm_num = (int(self.meta_data['duration'][:index_s]) * int(self.meta_data['framerate']))
         self.recorded_frame_num = (np.shape(self.txt_data))[0]
@@ -656,8 +795,8 @@ class NumberOfFramesCheck(Check):
 
         return self.result
 
-    def detailed_serialize(self):
-        """Serialize detailed information."""
+    def detailed_serialize(self) -> dict:
+         
         super().serialize()
         self.report = self.report | {'exp_frm_num': self.exp_frm_num,
                                      'recorded_frame_num': self.recorded_frame_num,
@@ -666,18 +805,23 @@ class NumberOfFramesCheck(Check):
                                      'Difference %': self.difference}
         return self.report
 
-    def light_serialize(self):
-        """Serialize light information."""
+    def light_serialize(self) -> dict:
+         
         super().serialize()
         return self.report
+
        
         
        
 class VRecordDurationCheck(Check):
-    """Class to check the duration of the Video file captured by the sensor."""
+    """!
+    @brief Class to check the duration of the Video file captured by the sensor.
+
+    This class checks the duration of the video file captured by the sensor and compares it with the expected duration based on metadata.
+    """
 
     def __init__(self, data: dict, path: str):
-        """Initialize the VRecordDurationCheck class."""
+         
         super().__init__(data, path)
         self.meta_data = data['meta']
         self.txt_data = data['txt']
@@ -688,10 +832,10 @@ class VRecordDurationCheck(Check):
         self.act_rec_duration = None
         self.recorded_frame_num = None
         self.difference_trsh = set_config.set_threshold("VRecordDurationCheck")
-        self.difference = None      #%
+        self.difference = None  # %
 
     def run(self) -> bool:
-        """Run the check for video file duration."""
+         
         index_s = self.meta_data['duration'].find('s')
         self.recorded_frame_num = (np.shape(self.txt_data))[0]
 
@@ -704,8 +848,8 @@ class VRecordDurationCheck(Check):
 
         return self.result
 
-    def detailed_serialize(self):
-        """Serialize detailed information."""
+    def detailed_serialize(self) -> dict:
+         
         super().serialize()
         self.report = self.report | {'exp_rec_duration (ms)': self.exp_rec_duration,
                                      'act_rec_duration (ms)': self.act_rec_duration,
@@ -713,17 +857,22 @@ class VRecordDurationCheck(Check):
                                      'Difference %': self.difference}
         return self.report
 
-    def light_serialize(self):
-        """Serialize light information."""
+    def light_serialize(self) -> dict:
+         
         super().serialize()
         return self.report
 
 
+
 class AbnormalFrameDurationCheck(Check):
-    """Class to check the duration of each frame and compare it with the normal frame duration."""
+    """!
+    @brief Class to check the duration of each frame and compare it with the normal frame duration.
+
+    This class checks the duration of each frame in the sensor data and compares it with the expected frame duration.
+    """
 
     def __init__(self, data: dict, path: str):
-        """Initialize the AbnormalFrameDurationCheck class."""
+         
         super().__init__(data, path)
         self.meta_data = data['meta']
         self.txt_data = data['txt']
@@ -739,7 +888,7 @@ class AbnormalFrameDurationCheck(Check):
         self.ratio = 0
 
     def run(self) -> bool:
-        """Run the check for abnormal frame duration."""
+         
         self.recorded_frame_num = (np.shape(self.txt_data))[0]
         timestamps = []
         abn_frms_drt = []
@@ -760,8 +909,8 @@ class AbnormalFrameDurationCheck(Check):
 
         return self.result
 
-    def detailed_serialize(self):
-        """Serialize detailed information."""
+    def detailed_serialize(self) -> dict:
+         
         super().serialize()
         self.report = self.report | {'configured_fram_duration (ms)': int(self.configured_frm_duration),
                                      'duration_difference_threshold': self.duration_difference_threshold,
@@ -771,17 +920,22 @@ class AbnormalFrameDurationCheck(Check):
                                      'Ratio (abnormal / normal)%': self.ratio}
         return self.report
 
-    def light_serialize(self):
-        """Serialize light information."""
+    def light_serialize(self) -> dict:
+         
         super().serialize()
         return self.report
 
 
+
 class GrowingMonotonicallyCheck(Check):
-    """Class to check that the duration of each frame is not monotonically."""
+    """!
+    @brief Class to check that the duration of each frame is not monotonically.
+
+    This class checks whether the duration of each frame is monotonically increasing or not.
+    """
 
     def __init__(self, data: dict, path: str):
-        """Initialize the GrowingMonotonicallyCheck class."""
+         
         super().__init__(data, path)
         self.meta_data = data['meta']
         self.txt_data = data['txt']
@@ -793,7 +947,7 @@ class GrowingMonotonicallyCheck(Check):
         self.recorded_frame_num = None
 
     def run(self) -> bool:
-        """Run the check for growing monotonically."""
+         
         # Calculating the number of frames recorded by sensors
         recorded_frame_num = (np.shape(self.txt_data))[0]
         # Calculating each timestamps (or each frame duration):
@@ -805,23 +959,28 @@ class GrowingMonotonicallyCheck(Check):
 
         return self.result
 
-    def detailed_serialize(self):
-        """Serialize detailed information."""
+    def detailed_serialize(self) -> dict:
+         
         super().serialize()
 
         return self.report
 
-    def light_serialize(self):
-        """Serialize light information."""
+    def light_serialize(self) -> dict:
+         
         super().serialize()
         return self.report
+
 
 
 class ARecordDurationCheck(Check):
-    """Class to check the duration of the Audio file captured by the sensor."""
+    """!
+    @brief Class to check the duration of the Audio file captured by the sensor.
+
+    This class checks whether the duration of the audio file matches the expected duration based on metadata.
+    """
 
     def __init__(self, data: dict, path: str):
-        """Initialize the ARecordDurationCheck class."""
+        
         super().__init__(data, path)
         self.meta_data = data['meta']
         self.txt_data = data['txt']
@@ -835,7 +994,7 @@ class ARecordDurationCheck(Check):
         self.Diff_Between_duration = None
 
     def run(self) -> bool:
-        """Run the check for audio file duration."""
+         
         self.one_smpl_duration = (1 / int(self.meta_data['rate'])) * 1000  # Calculating the frame duration in ms.
         self.recorded_samples_num = (np.shape(self.txt_data))[0]
 
@@ -848,8 +1007,8 @@ class ARecordDurationCheck(Check):
 
         return self.result
 
-    def detailed_serialize(self):
-        """Serialize detailed information."""
+    def detailed_serialize(self) -> dict:
+         
         super().serialize()
         self.report = self.report | {'exp_rec_duration (ms)': int(self.exp_rec_duration),
                                      'act_rec_duration (ms)': int(self.act_rec_duration),
@@ -858,17 +1017,22 @@ class ARecordDurationCheck(Check):
 
         return self.report
 
-    def light_serialize(self):
-        """Serialize light information."""
+    def light_serialize(self) -> dict:
+         
         super().serialize()
         return self.report
 
 
 class Checker:
-    """Main class for calling checkers."""
+    """!
+    @brief Main class of the package to manage all the level of checkers.
+
+    This class is the main part of this package. It checks the names of the sensors
+    and calls the appropriate checkers and processes the result to build a report.
+    """
 
     def __init__(self, path="mypath", light_mode=True):
-        """Initialize Checker class."""
+         
         self.data = {}
         self.report = {}
         self.excel_report = {}
@@ -876,10 +1040,35 @@ class Checker:
         self.light_mode = light_mode
         self.result = True
         self.setting_data = None
+        self.overall_reprot = OverallReprot()
 
     def run(self):
         
-        """Run the checkers."""
+        """!
+        @brief Run the checker for all the Sensor files.
+
+        
+        This method traverses through the directory structure starting from the root where the recorded files are stored. It systematically examines the information within each file recorded by the sensor, ensuring comprehensive troubleshooting.
+
+        The method is organized into three main parts:
+
+        1. **Root Review:**
+        At the root level, the method checks for specific conditions or abnormalities related to the overall structure of the recorded files. The results of these checks are saved in the appropriate format for processing, either as a lightweight JSON report or a detailed one, along with Excel reports.
+
+        2. **Folder Review:**
+        For each sensor type, such as 'depth.kinect', 'ir.kinect', 'depth.flexx2', 'ir.flexx2', and 'thermal.lepton', the method performs checks at the folder level. It examines the contents of each folder to identify any unexpected files, empty files, or any other conditions that may require attention. The results are saved in JSON and Excel reports.
+
+        3. **File Review:**
+        At the file level, the method conducts various checks for each recorded file. These checks include ensuring the correct number of frames, verifying file sizes, validating frame durations, and examining other specific characteristics. The results of these checks are again saved in the appropriate JSON and Excel reports.
+
+        This systematic approach allows for a thorough troubleshooting process, providing detailed insights into any issues or inconsistencies present in the recorded files. The reports generated serve as valuable documentation for further analysis and corrective actions.
+
+
+
+        @return: Tuple containing the result, detailed report, and Excel report.
+        """
+        # Loading overall report for adding new data:
+        self.overall_reprot.load_state()
         # Root checking
         self.excel_report['Root_Checking'] = {}
         root_report = {}
@@ -892,6 +1081,7 @@ class Checker:
 
         if not abn_fld_path_result:
             root_result = False
+            self.overall_reprot.add_new_error('AbnormalFolderInRootCheck')
         root_report['AbnormalFolderInRootCheck'] = abn_fld_path.light_serialize() if self.light_mode else abn_fld_path.detailed_serialize()
 
         # EmptyFileInRootCheck
@@ -901,6 +1091,7 @@ class Checker:
 
         if not emp_file_path_result:
             root_result = False
+            self.overall_reprot.add_new_error('EmptyFileInRootCheck')
         root_report['EmptyFileInRootCheck'] = emp_file_path.light_serialize() if self.light_mode else emp_file_path.detailed_serialize()
 
         self.report['Root_Checking'] = {'Status': root_result}
@@ -925,6 +1116,7 @@ class Checker:
                     nf_check_result = num_files_check.run()
                     if not nf_check_result:
                         sensor_check_result = False
+                        self.overall_reprot.add_new_error('NumberOfFilesCheck', name)
 
                     sensor_report['Folder_Checking']['NumberOfFilesCheck'] = (num_files_check.light_serialize() if self.light_mode else num_files_check.detailed_serialize())
                     self.excel_report[name] = {'NumberOfFilesCheck': bool(nf_check_result)}
@@ -934,6 +1126,7 @@ class Checker:
                     tf_check_res = tf_check.run()
                     if not tf_check_res:
                         sensor_check_result = False
+                        self.overall_reprot.add_new_error('UnexpectedFileCheck', name)
 
                     sensor_report['Folder_Checking']['UnexpectedFileCheck'] = (tf_check.light_serialize() if self.light_mode else tf_check.detailed_serialize())
                     self.excel_report[name]['UnexpectedFileCheck'] = tf_check_res
@@ -943,6 +1136,7 @@ class Checker:
                     ef_check_res = ef_check.run()
                     if not ef_check_res:
                         sensor_check_result = False
+                        self.overall_reprot.add_new_error('EmptyFilesCheck', name)
 
 
                     sensor_report['Folder_Checking']['EmptyFilesCheck'] = (ef_check.light_serialize() if self.light_mode else ef_check.detailed_serialize())
@@ -958,6 +1152,7 @@ class Checker:
                             frm_num_consis_check_result = frm_num_consis_check.run()
                             if not frm_num_consis_check_result:
                                 sensor_check_result = False
+                                self.overall_reprot.add_new_error('kinect_ir_depth_frame_number_consistency_check', name)
                     
                             sensor_report['File_Checking'][file_name]['kinect_ir_depth_frame_number_consistency_check'] = (frm_num_consis_check.light_serialize() if self.light_mode else frm_num_consis_check.detailed_serialize())
                             self.excel_report[name]['kinect_ir_depth_frame_number_consistency_check'] = frm_num_consis_check_result
@@ -968,6 +1163,7 @@ class Checker:
                             frm_num_consis_check_result = frm_num_consis_check.run()
                             if not frm_num_consis_check_result:
                                 sensor_check_result = False
+                                self.overall_reprot.add_new_error('flexx2_ir_depth_frame_number_consistency_check', name)
                     
                             sensor_report['File_Checking'][file_name]['flexx2_ir_depth_frame_number_consistency_check'] = (frm_num_consis_check.light_serialize() if self.light_mode else frm_num_consis_check.detailed_serialize())
                             self.excel_report[name]['flexx2_ir_depth_frame_number_consistency_check'] = frm_num_consis_check_result
@@ -979,6 +1175,7 @@ class Checker:
                             timstmp_consis_check_result = timstmp_consis_check.run()
                             if not timstmp_consis_check_result:
                                 sensor_check_result = False
+                                self.overall_reprot.add_new_error('flexx2_ir_depth_timestamps_consistency_check', name)
                     
                             sensor_report['File_Checking'][file_name]['flexx2_ir_depth_timestamps_consistency_check'] = (timstmp_consis_check.light_serialize() if self.light_mode else timstmp_consis_check.detailed_serialize())
                             self.excel_report[name]['flexx2_ir_depth_timestamps_consistency_check'] = timstmp_consis_check_result
@@ -989,6 +1186,7 @@ class Checker:
                             timstmp_consis_check_result = timstmp_consis_check.run()
                             if not timstmp_consis_check_result:
                                 sensor_check_result = False
+                                self.overall_reprot.add_new_error('kinect_ir_depth_timestamps_consistency_check', name)
                     
                             sensor_report['File_Checking'][file_name]['kinect_ir_depth_timestamps_consistency_check'] = (timstmp_consis_check.light_serialize() if self.light_mode else timstmp_consis_check.detailed_serialize())
                             self.excel_report[name]['kinect_ir_depth_timestamps_consistency_check'] = timstmp_consis_check_result
@@ -998,6 +1196,7 @@ class Checker:
                         RawSize_check_res = RawSize_check.run()
                         if not RawSize_check_res:
                             sensor_check_result = False
+                            self.overall_reprot.add_new_error('RawSizeCheck', name)
 
                         sensor_report['File_Checking'][file_name]['RawSizeCheck'] = RawSize_check.light_serialize() if self.light_mode else RawSize_check.detailed_serialize()
                         self.excel_report[name]['RawSizeCheck'] = RawSize_check_res
@@ -1008,6 +1207,7 @@ class Checker:
                             nframe_check_res = nframe_check.run()
                             if not nframe_check_res:
                                 sensor_check_result = False
+                                self.overall_reprot.add_new_error('NumberOfFramesCheck', name)
                     
                             sensor_report['File_Checking'][file_name]['NumberOfFramesCheck'] = (nframe_check.light_serialize() if self.light_mode else nframe_check.detailed_serialize())
                             self.excel_report[name]['NumberOfFramesCheck'] = bool(nframe_check_res)
@@ -1017,6 +1217,7 @@ class Checker:
                         rec_drt_check_res = rec_drt_check.run()
                         if not rec_drt_check_res:
                             sensor_check_result = False
+                            self.overall_reprot.add_new_error('VRecordDurationCheck', name)
 
                         sensor_report['File_Checking'][file_name]['VRecordDurationCheck'] = (rec_drt_check.light_serialize() if self.light_mode else rec_drt_check.detailed_serialize())
                         self.excel_report[name]['VRecordDurationCheck'] = rec_drt_check_res
@@ -1026,6 +1227,7 @@ class Checker:
                         abn_frm_drt_check_res = abn_frm_drt_check.run()
                         if not abn_frm_drt_check_res:
                             sensor_check_result = False
+                            self.overall_reprot.add_new_error('AbnormalFrameDurationCheck', name)
 
                         sensor_report['File_Checking'][file_name]['AbnormalFrameDurationCheck'] = (abn_frm_drt_check.light_serialize() if self.light_mode else abn_frm_drt_check.detailed_serialize())
                         self.excel_report[name]['AbnormalFrameDurationCheck'] = abn_frm_drt_check_res
@@ -1035,6 +1237,7 @@ class Checker:
                         growmono_check_res = growmono_check.run()
                         if not growmono_check_res:
                             sensor_check_result = False
+                            self.overall_reprot.add_new_error('GrowingMonotonicallyCheck', name)
 
                         sensor_report['File_Checking'][file_name]['GrowingMonotonicallyCheck'] = (growmono_check.light_serialize() if self.light_mode else growmono_check.detailed_serialize())
                         self.excel_report[name]['GrowingMonotonicallyCheck'] = growmono_check_res
@@ -1045,4 +1248,9 @@ class Checker:
                         self.result = sensor_check_result
 
 
+        # Saving overall report for storing new data:
+        self.overall_reprot.save_state()
+
         return self.result ,self.report, self.excel_report
+    
+# @} ##

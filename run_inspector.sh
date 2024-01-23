@@ -1,5 +1,19 @@
 #!/bin/bash
 
+##
+# @file
+# @brief Inspector Project Shell Script
+#
+# @details
+# This script prompts the user for configuration settings, including folder paths,
+# report paths, and configuration options. It then runs the Inspector module multiple times
+# based on the specified folder path and generates JSON and Excel reports.
+#
+# @author Your Name
+# @date January 1, 2023
+#
+
+
 # Welcome
 echo "Inspector Project"
 echo -e "\nEnter the configuration setting: \n"
@@ -66,11 +80,30 @@ fi
 
 for name in "$folder_path"/*; do
     folder_name="/$(basename "$name")"
-    python3 main_inspector.py -f "$folder_path$folder_name" -e $enable_report -j "${json_report_path}/json_report/${folder_name}" -l $light_mode -x "${excel_report_path}/excel_report/${folder_name}"
+    python3 arg_parser.py -f "$folder_path$folder_name" -e $enable_report -j "${json_report_path}/json_report/${folder_name}" -l $light_mode -x "${excel_report_path}/excel_report/${folder_name}" 
  done
 
 echo -e "\n #[Info] The Json Report saved :\n ${excel_report_path}"
-echo -e "\n #[Info] The Excel Report saved :\n ${json_report_path}"
+echo -e "\n #[Info] The Excel Report saved :\n ${json_report_path}\n"
+
+read -p "Open Report Directory (Y/N)? " answer
+        if [[ "$answer" =~ ^[Yy]$ ]]; then
+            if [ -d "$json_report_path" ]; then
+            # Try to open the file explorer with the specified directory
+                if command -v xdg-open > /dev/null; then
+                    xdg-open "$json_report_path"
+                elif command -v open > /dev/null; then
+                    open "$json_report_path"
+                else
+                    echo "Error: Unable to open the directory. Please open it manually."
+                fi
+            else
+                echo "Report directory not found. Please generate the report first."
+            fi
+        else
+            echo "Report directory will not be opened."
+        fi
+
 read wait
 
 
