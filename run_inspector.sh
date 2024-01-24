@@ -22,7 +22,7 @@ echo -e "\nEnter the configuration setting: \n"
 while [ -z "$folder_path" ]; do
     
     echo -e "\n#[INFO]: Template: Sensor path: /home/mt/Public/1/0001/105917/color.kinect"
-    echo -e "\n#[INFO]: The path you should enter : /home/mt/Public/1 "
+    echo -e "\n#[INFO]: The path you should enter : /home/mt/Public/1"
     echo -e "\nFolder Path ? "
     read folder_path
 done
@@ -83,6 +83,7 @@ for name in "$folder_path"/*; do
     python3 arg_parser.py -f "$folder_path$folder_name" -e $enable_report -j "${json_report_path}/json_report/${folder_name}" -l $light_mode -x "${excel_report_path}/excel_report/${folder_name}" 
  done
 
+
 echo -e "\n #[Info] The Json Report saved :\n ${excel_report_path}"
 echo -e "\n #[Info] The Excel Report saved :\n ${json_report_path}\n"
 
@@ -103,6 +104,7 @@ read -p "Open Report Directory (Y/N)? " answer
         else
             echo "Report directory will not be opened."
         fi
+
 
 read wait
 

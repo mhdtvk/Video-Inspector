@@ -63,7 +63,7 @@ def show_help_popup():
     This function creates a popup window with template information.
     """
     popup_window = tk.Toplevel(app)
-    popup_window.title("Template")
+    popup_window.title("Hint")
 
     folder_path_guide_popup = tk.Label(popup_window, text="Template: Sensor path: /home/mt/Public/1/0001/105917/color.kinect\nThe path you should enter : /home/mt/Public/1", wraplength=300, justify="left", font=("Arial", 8))
     folder_path_guide_popup.pack(padx=10, pady=10)
@@ -80,7 +80,7 @@ folder_path_entry = tk.Entry(app)
 folder_path_entry.grid(row=0, column=1, pady=5)  # Adjust row number
 
 # Help button to show the help information in a pop-up window
-help_button = tk.Button(app, text="Template", command=show_help_popup)
+help_button = tk.Button(app, text="Hint", command=show_help_popup)
 help_button.grid(row=0, column=2, pady=5)
 
 

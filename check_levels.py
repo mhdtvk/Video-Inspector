@@ -22,7 +22,6 @@ try:
     import os
     import json
     import re
-    from overall_report_generator import *
 
 except ImportError as e:
     print(f"Error: {e}")
@@ -1040,7 +1039,6 @@ class Checker:
         self.light_mode = light_mode
         self.result = True
         self.setting_data = None
-        self.overall_reprot = OverallReprot()
 
     def run(self):
         
@@ -1068,7 +1066,6 @@ class Checker:
         @return: Tuple containing the result, detailed report, and Excel report.
         """
         # Loading overall report for adding new data:
-        self.overall_reprot.load_state()
         # Root checking
         self.excel_report['Root_Checking'] = {}
         root_report = {}
@@ -1081,7 +1078,6 @@ class Checker:
 
         if not abn_fld_path_result:
             root_result = False
-            self.overall_reprot.add_new_error('AbnormalFolderInRootCheck')
         root_report['AbnormalFolderInRootCheck'] = abn_fld_path.light_serialize() if self.light_mode else abn_fld_path.detailed_serialize()
 
         # EmptyFileInRootCheck
@@ -1091,7 +1087,6 @@ class Checker:
 
         if not emp_file_path_result:
             root_result = False
-            self.overall_reprot.add_new_error('EmptyFileInRootCheck')
         root_report['EmptyFileInRootCheck'] = emp_file_path.light_serialize() if self.light_mode else emp_file_path.detailed_serialize()
 
         self.report['Root_Checking'] = {'Status': root_result}
@@ -1116,7 +1111,6 @@ class Checker:
                     nf_check_result = num_files_check.run()
                     if not nf_check_result:
                         sensor_check_result = False
-                        self.overall_reprot.add_new_error('NumberOfFilesCheck', name)
 
                     sensor_report['Folder_Checking']['NumberOfFilesCheck'] = (num_files_check.light_serialize() if self.light_mode else num_files_check.detailed_serialize())
                     self.excel_report[name] = {'NumberOfFilesCheck': bool(nf_check_result)}
@@ -1126,7 +1120,6 @@ class Checker:
                     tf_check_res = tf_check.run()
                     if not tf_check_res:
                         sensor_check_result = False
-                        self.overall_reprot.add_new_error('UnexpectedFileCheck', name)
 
                     sensor_report['Folder_Checking']['UnexpectedFileCheck'] = (tf_check.light_serialize() if self.light_mode else tf_check.detailed_serialize())
                     self.excel_report[name]['UnexpectedFileCheck'] = tf_check_res
@@ -1136,7 +1129,6 @@ class Checker:
                     ef_check_res = ef_check.run()
                     if not ef_check_res:
                         sensor_check_result = False
-                        self.overall_reprot.add_new_error('EmptyFilesCheck', name)
 
 
                     sensor_report['Folder_Checking']['EmptyFilesCheck'] = (ef_check.light_serialize() if self.light_mode else ef_check.detailed_serialize())
@@ -1152,7 +1144,6 @@ class Checker:
                             frm_num_consis_check_result = frm_num_consis_check.run()
                             if not frm_num_consis_check_result:
                                 sensor_check_result = False
-                                self.overall_reprot.add_new_error('kinect_ir_depth_frame_number_consistency_check', name)
                     
                             sensor_report['File_Checking'][file_name]['kinect_ir_depth_frame_number_consistency_check'] = (frm_num_consis_check.light_serialize() if self.light_mode else frm_num_consis_check.detailed_serialize())
                             self.excel_report[name]['kinect_ir_depth_frame_number_consistency_check'] = frm_num_consis_check_result
@@ -1163,7 +1154,6 @@ class Checker:
                             frm_num_consis_check_result = frm_num_consis_check.run()
                             if not frm_num_consis_check_result:
                                 sensor_check_result = False
-                                self.overall_reprot.add_new_error('flexx2_ir_depth_frame_number_consistency_check', name)
                     
                             sensor_report['File_Checking'][file_name]['flexx2_ir_depth_frame_number_consistency_check'] = (frm_num_consis_check.light_serialize() if self.light_mode else frm_num_consis_check.detailed_serialize())
                             self.excel_report[name]['flexx2_ir_depth_frame_number_consistency_check'] = frm_num_consis_check_result
@@ -1175,7 +1165,6 @@ class Checker:
                             timstmp_consis_check_result = timstmp_consis_check.run()
                             if not timstmp_consis_check_result:
                                 sensor_check_result = False
-                                self.overall_reprot.add_new_error('flexx2_ir_depth_timestamps_consistency_check', name)
                     
                             sensor_report['File_Checking'][file_name]['flexx2_ir_depth_timestamps_consistency_check'] = (timstmp_consis_check.light_serialize() if self.light_mode else timstmp_consis_check.detailed_serialize())
                             self.excel_report[name]['flexx2_ir_depth_timestamps_consistency_check'] = timstmp_consis_check_result
@@ -1186,7 +1175,6 @@ class Checker:
                             timstmp_consis_check_result = timstmp_consis_check.run()
                             if not timstmp_consis_check_result:
                                 sensor_check_result = False
-                                self.overall_reprot.add_new_error('kinect_ir_depth_timestamps_consistency_check', name)
                     
                             sensor_report['File_Checking'][file_name]['kinect_ir_depth_timestamps_consistency_check'] = (timstmp_consis_check.light_serialize() if self.light_mode else timstmp_consis_check.detailed_serialize())
                             self.excel_report[name]['kinect_ir_depth_timestamps_consistency_check'] = timstmp_consis_check_result
@@ -1196,7 +1184,6 @@ class Checker:
                         RawSize_check_res = RawSize_check.run()
                         if not RawSize_check_res:
                             sensor_check_result = False
-                            self.overall_reprot.add_new_error('RawSizeCheck', name)
 
                         sensor_report['File_Checking'][file_name]['RawSizeCheck'] = RawSize_check.light_serialize() if self.light_mode else RawSize_check.detailed_serialize()
                         self.excel_report[name]['RawSizeCheck'] = RawSize_check_res
@@ -1207,7 +1194,6 @@ class Checker:
                             nframe_check_res = nframe_check.run()
                             if not nframe_check_res:
                                 sensor_check_result = False
-                                self.overall_reprot.add_new_error('NumberOfFramesCheck', name)
                     
                             sensor_report['File_Checking'][file_name]['NumberOfFramesCheck'] = (nframe_check.light_serialize() if self.light_mode else nframe_check.detailed_serialize())
                             self.excel_report[name]['NumberOfFramesCheck'] = bool(nframe_check_res)
@@ -1217,7 +1203,6 @@ class Checker:
                         rec_drt_check_res = rec_drt_check.run()
                         if not rec_drt_check_res:
                             sensor_check_result = False
-                            self.overall_reprot.add_new_error('VRecordDurationCheck', name)
 
                         sensor_report['File_Checking'][file_name]['VRecordDurationCheck'] = (rec_drt_check.light_serialize() if self.light_mode else rec_drt_check.detailed_serialize())
                         self.excel_report[name]['VRecordDurationCheck'] = rec_drt_check_res
@@ -1227,7 +1212,6 @@ class Checker:
                         abn_frm_drt_check_res = abn_frm_drt_check.run()
                         if not abn_frm_drt_check_res:
                             sensor_check_result = False
-                            self.overall_reprot.add_new_error('AbnormalFrameDurationCheck', name)
 
                         sensor_report['File_Checking'][file_name]['AbnormalFrameDurationCheck'] = (abn_frm_drt_check.light_serialize() if self.light_mode else abn_frm_drt_check.detailed_serialize())
                         self.excel_report[name]['AbnormalFrameDurationCheck'] = abn_frm_drt_check_res
@@ -1237,7 +1221,6 @@ class Checker:
                         growmono_check_res = growmono_check.run()
                         if not growmono_check_res:
                             sensor_check_result = False
-                            self.overall_reprot.add_new_error('GrowingMonotonicallyCheck', name)
 
                         sensor_report['File_Checking'][file_name]['GrowingMonotonicallyCheck'] = (growmono_check.light_serialize() if self.light_mode else growmono_check.detailed_serialize())
                         self.excel_report[name]['GrowingMonotonicallyCheck'] = growmono_check_res
@@ -1249,7 +1232,6 @@ class Checker:
 
 
         # Saving overall report for storing new data:
-        self.overall_reprot.save_state()
 
         return self.result ,self.report, self.excel_report
     
