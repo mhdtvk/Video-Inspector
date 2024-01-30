@@ -11,16 +11,17 @@ Inspector is a Python program designed to check the performance of the sensors a
 ## Technologies and Libraries
 
 Inspector leverages the following libraries:
-- argparse
-- tqdm
+- argparse    1.1
+- tqdm        4.66.1
 - time
 - typing
-- numpy
+- numpy      1.26.2
 - os
-- json
+- json       2.0.9
 - re
-- openpyxl
-- pandas
+- openpyxl   3.1.2
+- pandas     2.1.4
+- pip        22.0.2
 
 The shell script `run_inspector.sh` is used to interact with the end-user.
 
