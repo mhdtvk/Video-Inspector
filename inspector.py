@@ -169,6 +169,7 @@ class Inspector():
             except PermissionError :
                 print(" You don't have permission to export reports to the enterd path")
 
+            print("\n=================================\n")
             for folders_name in tqdm(os.listdir(self.root_path)):
                 if folders_name.isdigit() and len(folders_name) == 6:
                     check_path = (self.root_path + '/' + folders_name)
@@ -202,6 +203,7 @@ class Inspector():
             print(f"\n#[Info]: Checked route: {self.root_path}\n")
             for one_report in self.print_in_terminal_result:
                 print(one_report)
+                
         elif (basename !='excel_report' and basename !='json_report'):
             print(basename)
             print(f"\n#[Warning]: The path has an unusual folder or file:\n {self.root_path}")

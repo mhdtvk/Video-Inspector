@@ -92,10 +92,8 @@ class ExcelGenerator:
          # Create a new sheet and add the DataFrame
         sheet = workbook.create_sheet(title=name)
         self.df = pd.DataFrame.from_dict(report)
-
         for r in dataframe_to_rows(self.df, index=True, header=True):
             sheet.append(r)
-
         return workbook
     
     def design_excel(self) :
@@ -110,6 +108,7 @@ class ExcelGenerator:
             if sheet_name != "Summary":
                 sheet = workbook[sheet_name]
                 # Add a new column at the beginning
+                
                 sheet.insert_cols(1)
 
                 sheet.merge_cells('A3:A4')
@@ -117,15 +116,26 @@ class ExcelGenerator:
                 sheet['D3'].value = sheet['C3'].value
                 sheet['D4'].value = sheet['C4'].value
                 sheet.delete_cols(3)
-                sheet.merge_cells('C3:G3')
-                sheet.merge_cells('C4:G4')
+
+                last_column_index = sheet.max_column
+
+                # Define the range to merge (from C3 to the last column in row 3)
+                merge_range = f'C3:{chr(ord("C") + last_column_index-3)}3'
+
+                # Merge cells
+                sheet.merge_cells(merge_range)
+
+                # Define the range to merge (from C4 to the last column in row 4)
+                merge_range = f'C4:{chr(ord("C") + last_column_index-3)}4'
+                sheet.merge_cells(merge_range)
+
                 sheet.column_dimensions['A'].width = 18
 
                 sheet.merge_cells('A5:A11')
                 sheet['A5'] = 'Sensors check (L1)'
 
-                sheet.merge_cells('A18:A22')
-                sheet['A18'] = 'Sensors check (L2)'                
+                sheet.merge_cells('A16:A18')
+                sheet['A16'] = 'Sensors check (L2)'                
 
                 cells_widths = 20
                 cells_heights = 30
@@ -186,13 +196,13 @@ class ExcelGenerator:
 
         workbook = self.convert_data_to_excel(workbook, report, name)
         sheet = workbook[name]
-
+        
         for row in sheet.iter_rows():
             self.false_check[name][row[0].value] = True
             for cell in row:
                 if cell.value is False:
                     self.false_check[name][row[0].value] = False 
-        
+        self.false_check[name].pop(None)
         # Save changes to the Excel file
         workbook.save(self.excel_file_path)
 
