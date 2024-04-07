@@ -76,12 +76,22 @@ elif [ "$light_mode" != true ] && [ "$light_mode" != false ]; then
 
 fi
 
-# Loop to run the Inspector module multiple times
+PYTHON_SCRIPT="root_founder.py"
 
-for name in "$folder_path"/*; do
-    folder_name="/$(basename "$name")"
-    python3 arg_parser.py -f "$folder_path$folder_name" -e $enable_report -j "${json_report_path}/json_report/${folder_name}" -l $light_mode -x "${excel_report_path}/excel_report/${folder_name}" 
- done
+result_paths=$(python3 "$PYTHON_SCRIPT" "$folder_path")
+
+if [ -z "$result_paths" ]; then
+    echo "Error: Python script did not return valid result."
+    exit 1
+fi
+
+# Loop to run the Inspector module multiple times
+for path in $result_paths; do
+    for name in "$path"/*; do
+        folder_name="/$(basename "$name")"
+        python3 arg_parser.py -f "$folder_path$folder_name" -e $enable_report -j "${json_report_path}/json_report/${folder_name}" -l $light_mode -x "${excel_report_path}/excel_report/${folder_name}" 
+    done
+done
 
 
 echo -e "\n #[Info] The Json Report saved :\n ${excel_report_path}"
